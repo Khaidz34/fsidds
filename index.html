@@ -410,6 +410,7 @@ textarea.inp-fc{resize:none;}
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-clock"></i></div><div><div class="stat-val" id="payUnpaid">—</div><div class="stat-lbl">Chưa thanh toán</div></div></div></div>
         </div>
         <div id="payList"></div>
+        <div id="payHistory"></div>
       </div>
 
       <!-- XUẤT HÓA ĐƠN -->
@@ -964,29 +965,62 @@ async function refreshPayment(){
   try{
     const mon=monthISO();
     const data=await api('GET',`/api/payments?month=${mon}`);
-    const total=data.reduce((s,x)=>s+x.total,0);
+    const total=data.reduce((s,x)=>s+(x.remainingTotal||0),0);
     document.getElementById('payTotal').textContent=(total/1000)+'k';
-    document.getElementById('payPaid').textContent=data.filter(x=>x.paid).length;
-    document.getElementById('payUnpaid').textContent=data.filter(x=>!x.paid).length;
+    document.getElementById('payPaid').textContent=data.filter(x=>(x.remainingTotal||0)===0 && (x.paidTotal||0)>0).length;
+    document.getElementById('payUnpaid').textContent=data.filter(x=>(x.remainingTotal||0)>0).length;
     document.getElementById('payList').innerHTML=data.length?data.map(x=>`
-      <div class="pay-card ${x.paid?'paid':''}">
+      <div class="pay-card ${(x.remainingTotal||0)===0 && (x.paidTotal||0)>0?'paid':''}">
         <div style="display:flex;align-items:center;gap:14px;">
           <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white;">${ini(x.fullname)}</div>
-          <div><div class="pay-name">${x.fullname}</div><div class="pay-detail">${x.count} suất × 40.000đ · ${mon}</div></div>
+          <div>
+            <div class="pay-name">${x.fullname}</div>
+            <div class="pay-detail">
+              Còn lại: <b>${x.remainingCount||0}</b> suất · ${(x.remainingTotal||0)/1000}k · ${mon}
+              ${(x.paidAt?`<span style="margin-left:10px;color:var(--text-muted);">| Đã trả: ${(x.paidTotal||0)/1000}k lúc ${new Date(x.paidAt).toLocaleString('vi-VN')}</span>`:'')}
+            </div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
-          <div class="pay-amount">${(x.total/1000)}k</div>
-          ${x.paid?`<span class="bdg-paid">✔ Đã thanh toán</span>`:`<button class="btn-pay" onclick="markPaid(${x.userId})"><i class="fas fa-check me-1"></i>Đã thanh toán</button>`}
+          <div class="pay-amount">${((x.remainingTotal||0)/1000)}k</div>
+          ${(x.remainingTotal||0)===0 && (x.paidTotal||0)>0?`<span class="bdg-paid">✔ Đã thanh toán</span>`:`<button class="btn-pay" onclick="markPaid(${x.userId})"><i class="fas fa-check me-1"></i>Đã thanh toán</button>`}
         </div>
       </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:40px;">Chưa có dữ liệu tháng này</div>';
+
+    // History table (audit)
+    const logs = await api('GET',`/api/payments/history?month=${mon}`).catch(()=>[]);
+    const box = document.getElementById('payHistory');
+    if(box){
+      box.innerHTML = (logs && logs.length) ? `
+        <div class="card-m" style="margin-top:14px;">
+          <div class="card-hd"><div class="card-hd-t">🧾 Lịch sử thanh toán (audit)</div></div>
+          <div style="overflow-x:auto;">
+            <table class="tbl">
+              <thead><tr><th>Thời gian</th><th>Nhân viên</th><th>Suất (lúc trả)</th><th>Số tiền (lúc trả)</th><th>Xác nhận bởi</th></tr></thead>
+              <tbody>
+                ${logs.map(l=>`
+                  <tr>
+                    <td style="color:var(--text-muted);">${new Date(l.paid_at).toLocaleString('vi-VN')}</td>
+                    <td style="font-weight:700;">${l.user?.fullname||'—'}</td>
+                    <td style="font-weight:800;color:var(--primary);">${l.paid_count}</td>
+                    <td style="font-weight:800;color:var(--secondary);">${(l.paid_total/1000)}k</td>
+                    <td style="color:var(--text-muted);">${l.confirmer?.fullname||'—'}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>` : '<div style="margin-top:14px;color:var(--text-muted);font-size:.85rem;">Chưa có lịch sử thanh toán tháng này.</div>';
+    }
   } catch(e){ toast('Lỗi thanh toán: '+e.message,'err'); }
 }
 
 async function markPaid(userId){
   try{
-    await api('POST','/api/payments/mark-paid',{userId,month:monthISO()});
+    const rs = await api('POST','/api/payments/mark-paid',{userId,month:monthISO()});
     const u=allUsers.find(x=>x.id===userId);
-    toast(`Đã xác nhận thanh toán cho ${u?.fullname||'nhân viên'} ✅`);
+    const paidTotal = rs?.payment?.paid_total ?? rs?.log?.paid_total;
+    const paidCount = rs?.payment?.paid_count ?? rs?.log?.paid_count;
+    toast(`Đã xác nhận thanh toán cho ${u?.fullname||'nhân viên'}: ${paidCount||0} suất · ${((paidTotal||0)/1000)}k ✅`);
     refreshPayment();
   } catch(e){ toast('Lỗi: '+e.message,'err'); }
 }

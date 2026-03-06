@@ -47,6 +47,25 @@ function adminMiddleware(req, res, next) {
   next();
 }
 
+async function getOrderStatsByUserForMonth(month) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('ordered_for, price, receiver:ordered_for(id, fullname)')
+    .eq('month', month);
+  if (error) throw new Error(error.message);
+
+  const stats = {};
+  (data || []).forEach(o => {
+    const key = o.ordered_for;
+    if (!stats[key]) {
+      stats[key] = { userId: key, fullname: o.receiver?.fullname || '—', ordersCount: 0, ordersTotal: 0 };
+    }
+    stats[key].ordersCount++;
+    stats[key].ordersTotal += o.price || 0;
+  });
+  return stats;
+}
+
 // ─── Health Check ────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({ status: 'ok', app: 'FSI DDS Backend', time: new Date().toISOString() });
@@ -508,59 +527,108 @@ app.get('/api/stats/dashboard', authMiddleware, async (req, res) => {
 app.get('/api/payments', authMiddleware, adminMiddleware, async (req, res) => {
   const month = req.query.month || new Date().toISOString().slice(0, 7);
 
-  const [paymentsRes, ordersRes] = await Promise.all([
-    supabase.from('payments').select('*').eq('month', month),
-    supabase.from('orders').select('ordered_for, price, receiver:ordered_for(id, fullname)').eq('month', month)
-  ]);
+  try {
+    const [paymentsRes, ordersStats] = await Promise.all([
+      supabase.from('payments').select('user_id, month, paid_at, paid_count, paid_total').eq('month', month),
+      getOrderStatsByUserForMonth(month)
+    ]);
 
-  const orderStats = {};
-  (ordersRes.data || []).forEach(o => {
-    const key = o.ordered_for;
-    if (!orderStats[key]) orderStats[key] = { userId: key, fullname: o.receiver.fullname, count: 0, total: 0 };
-    orderStats[key].count++;
-    orderStats[key].total += o.price;
-  });
+    const paidMap = {};
+    (paymentsRes.data || []).forEach(p => { paidMap[p.user_id] = p; });
 
-  const paidMap = {};
-  (paymentsRes.data || []).forEach(p => { paidMap[p.user_id] = p; });
+    const result = Object.values(ordersStats).map(s => {
+      const paidEntry = paidMap[s.userId];
+      const paidCount = paidEntry?.paid_count || 0;
+      const paidTotal = paidEntry?.paid_total || 0;
+      const remainingCount = Math.max(0, (s.ordersCount || 0) - paidCount);
+      const remainingTotal = Math.max(0, (s.ordersTotal || 0) - paidTotal);
+      return {
+        userId: s.userId,
+        fullname: s.fullname,
+        ordersCount: s.ordersCount,
+        ordersTotal: s.ordersTotal,
+        paidCount,
+        paidTotal,
+        remainingCount,
+        remainingTotal,
+        paidAt: paidEntry?.paid_at || null
+      };
+    });
 
-  const result = Object.values(orderStats).map(s => {
-    const paidEntry = paidMap[s.userId];
-    const paid = !!paidEntry;
-    // Khi đã thanh toán, coi như số suất/số tiền còn lại trong tháng = 0
-    return {
-      userId: s.userId,
-      fullname: s.fullname,
-      count: paid ? 0 : s.count,
-      total: paid ? 0 : s.total,
-      paid,
-      paidAt: paidEntry?.paid_at || null
-    };
-  });
+    // include users that have payment but no orders (edge)
+    (paymentsRes.data || []).forEach(p => {
+      if (ordersStats[p.user_id]) return;
+      result.push({
+        userId: p.user_id,
+        fullname: '—',
+        ordersCount: 0,
+        ordersTotal: 0,
+        paidCount: p.paid_count || 0,
+        paidTotal: p.paid_total || 0,
+        remainingCount: 0,
+        remainingTotal: 0,
+        paidAt: p.paid_at || null
+      });
+    });
 
-  res.json(result.sort((a, b) => b.count - a.count));
+    // sort by remainingTotal desc then name
+    result.sort((a, b) => (b.remainingTotal - a.remainingTotal) || (a.fullname || '').localeCompare((b.fullname || ''), 'vi'));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Lỗi lấy thanh toán' });
+  }
 });
 
 // Người dùng: trạng thái thanh toán của chính mình
 app.get('/api/payments/my', authMiddleware, async (req, res) => {
   const month = req.query.month || new Date().toISOString().slice(0, 7);
   try {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('paid_at')
-      .eq('user_id', req.user.id)
-      .eq('month', month);
+    const [ordersRes, payRes] = await Promise.all([
+      supabase.from('orders').select('price', { count: 'exact', head: false }).eq('month', month).eq('ordered_for', req.user.id),
+      supabase.from('payments').select('paid_at, paid_count, paid_total').eq('month', month).eq('user_id', req.user.id).maybeSingle()
+    ]);
 
-    if (error) return res.status(500).json({ error: error.message });
+    const ordersCount = ordersRes.count || 0;
+    const ordersTotal = (ordersRes.data || []).reduce((s, o) => s + (o.price || 0), 0);
+    const paidCount = payRes.data?.paid_count || 0;
+    const paidTotal = payRes.data?.paid_total || 0;
+    const remainingCount = Math.max(0, ordersCount - paidCount);
+    const remainingTotal = Math.max(0, ordersTotal - paidTotal);
 
-    if (!data || !data.length) {
-      return res.json({ month, paid: false, paidAt: null });
-    }
-
-    return res.json({ month, paid: true, paidAt: data[0].paid_at });
+    res.json({
+      month,
+      ordersCount,
+      ordersTotal,
+      paidCount,
+      paidTotal,
+      remainingCount,
+      remainingTotal,
+      paidAt: payRes.data?.paid_at || null
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Lỗi lấy trạng thái thanh toán' });
+  }
+});
+
+// Admin: lịch sử thanh toán theo tháng
+app.get('/api/payments/history', authMiddleware, adminMiddleware, async (req, res) => {
+  const month = req.query.month || new Date().toISOString().slice(0, 7);
+  try {
+    const { data, error } = await supabase
+      .from('payment_logs')
+      .select(`
+        id, user_id, month, paid_count, paid_total, paid_at,
+        user:user_id(id, fullname),
+        confirmer:confirmed_by(id, fullname)
+      `)
+      .eq('month', month)
+      .order('paid_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lỗi lấy lịch sử thanh toán' });
   }
 });
 
@@ -636,14 +704,54 @@ app.post('/api/payments/mark-paid', authMiddleware, adminMiddleware, async (req,
   const { userId, month } = req.body;
   if (!userId || !month) return res.status(400).json({ error: 'Thiếu thông tin' });
 
-  const { data, error } = await supabase
-    .from('payments')
-    .upsert({ user_id: userId, month, paid_at: new Date().toISOString(), confirmed_by: req.user.id })
-    .select()
-    .single();
+  try {
+    // Snapshot tại thời điểm bấm thanh toán (suất + tiền)
+    const { data: orders, error: ordErr } = await supabase
+      .from('orders')
+      .select('price')
+      .eq('month', month)
+      .eq('ordered_for', userId);
+    if (ordErr) return res.status(500).json({ error: ordErr.message });
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+    const paidCount = (orders || []).length;
+    const paidTotal = (orders || []).reduce((s, o) => s + (o.price || 0), 0);
+    const paidAt = new Date().toISOString();
+
+    // Cập nhật trạng thái thanh toán hiện tại (last snapshot)
+    const up = await supabase
+      .from('payments')
+      .upsert({
+        user_id: userId,
+        month,
+        paid_count: paidCount,
+        paid_total: paidTotal,
+        paid_at: paidAt,
+        confirmed_by: req.user.id
+      })
+      .select()
+      .single();
+    if (up.error) return res.status(500).json({ error: up.error.message });
+
+    // Ghi lịch sử (audit)
+    const ins = await supabase
+      .from('payment_logs')
+      .insert({
+        user_id: userId,
+        month,
+        paid_count: paidCount,
+        paid_total: paidTotal,
+        paid_at: paidAt,
+        confirmed_by: req.user.id
+      })
+      .select()
+      .single();
+    if (ins.error) return res.status(500).json({ error: ins.error.message });
+
+    res.json({ payment: up.data, log: ins.data });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Lỗi xác nhận thanh toán' });
+  }
 });
 
 // ─── Start ───────────────────────────────────────────────────

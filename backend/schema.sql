@@ -49,9 +49,22 @@ CREATE TABLE IF NOT EXISTS payments (
   id           BIGSERIAL PRIMARY KEY,
   user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   month        VARCHAR(7) NOT NULL,  -- format: 2024-03
+  paid_count   INT NOT NULL DEFAULT 0,
+  paid_total   INT NOT NULL DEFAULT 0,
   paid_at      TIMESTAMPTZ DEFAULT NOW(),
   confirmed_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
   UNIQUE(user_id, month)
+);
+
+-- 6. PAYMENT LOGS (lịch sử thanh toán để truy xuất ngược)
+CREATE TABLE IF NOT EXISTS payment_logs (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  month        VARCHAR(7) NOT NULL,
+  paid_count   INT NOT NULL,
+  paid_total   INT NOT NULL,
+  paid_at      TIMESTAMPTZ DEFAULT NOW(),
+  confirmed_by BIGINT REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- ─── Indexes (tăng tốc query) ─────────────────────────────
@@ -63,6 +76,8 @@ CREATE INDEX IF NOT EXISTS idx_menus_date         ON menus(date);
 CREATE INDEX IF NOT EXISTS idx_dishes_menu_id     ON dishes(menu_id);
 CREATE INDEX IF NOT EXISTS idx_payments_month     ON payments(month);
 CREATE INDEX IF NOT EXISTS idx_payments_user_id   ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_logs_month ON payment_logs(month);
+CREATE INDEX IF NOT EXISTS idx_payment_logs_user  ON payment_logs(user_id);
 
 -- ─── Row Level Security (tắt để dùng service key) ────────
 ALTER TABLE users    DISABLE ROW LEVEL SECURITY;
@@ -70,6 +85,7 @@ ALTER TABLE menus    DISABLE ROW LEVEL SECURITY;
 ALTER TABLE dishes   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE orders   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE payments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_logs DISABLE ROW LEVEL SECURITY;
 
 -- ─── Seed admin mặc định ─────────────────────────────────
 -- Password: password (bcrypt hash)
