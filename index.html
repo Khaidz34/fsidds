@@ -25,13 +25,19 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px;}
 
 /* AUTH */
-.auth-wrap{min-height:100vh;background:linear-gradient(135deg,#0056D2 0%,#0A84FF 50%,#00B4D8 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.auth-wrap{min-height:100vh;background:radial-gradient(1200px 800px at 15% 10%, rgba(255,193,7,.28) 0%, rgba(255,193,7,0) 55%), radial-gradient(900px 700px at 85% 20%, rgba(0,184,148,.22) 0%, rgba(0,184,148,0) 52%), linear-gradient(135deg,#0056D2 0%,#0A84FF 55%,#00B4D8 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:24px;}
 .auth-wrap::before{content:'';position:absolute;width:700px;height:700px;background:rgba(255,255,255,0.05);border-radius:50%;top:-250px;right:-200px;animation:floatBg 10s ease-in-out infinite;}
 .auth-wrap::after{content:'';position:absolute;width:500px;height:500px;background:rgba(255,255,255,0.05);border-radius:50%;bottom:-200px;left:-180px;animation:floatBg 7s ease-in-out infinite reverse;}
 @keyframes floatBg{0%,100%{transform:translateY(0)scale(1);}50%{transform:translateY(-30px)scale(1.05);}}
 .float-el{position:absolute;font-size:2.8rem;pointer-events:none;animation:floatEl 5s ease-in-out infinite;}
 @keyframes floatEl{0%,100%{transform:translateY(0)rotate(0deg);}50%{transform:translateY(-18px)rotate(8deg);}}
-.auth-card{background:white;border-radius:28px;padding:46px 44px;width:100%;max-width:430px;box-shadow:0 30px 80px rgba(0,0,0,0.22);position:relative;z-index:10;animation:slideUp .55s cubic-bezier(.22,.68,0,1.2);}
+.auth-shell{width:100%;max-width:980px;display:flex;gap:18px;align-items:stretch;position:relative;z-index:10;}
+.auth-side{flex:1;min-height:520px;border-radius:28px;padding:34px 34px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(10px);box-shadow:0 22px 70px rgba(0,0,0,.20);color:white;display:none;}
+.auth-side h1{font-family:'Baloo 2',cursive;font-weight:900;font-size:2.1rem;line-height:1.15;margin:6px 0 10px;}
+.auth-side p{opacity:.9;font-weight:700;max-width:420px;}
+.food-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.food-pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);padding:8px 12px;border-radius:999px;font-weight:800;font-size:.82rem;}
+.auth-card{background:white;border-radius:28px;padding:38px 34px;width:100%;max-width:460px;box-shadow:0 30px 80px rgba(0,0,0,0.22);position:relative;animation:slideUp .55s cubic-bezier(.22,.68,0,1.2);}
 @keyframes slideUp{from{opacity:0;transform:translateY(50px);}to{opacity:1;transform:translateY(0);}}
 .brand-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;}
 .brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,86,210,0.3);overflow:hidden;}
@@ -57,7 +63,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 .auth-error{background:#FEEFEF;color:var(--danger);border-radius:10px;padding:10px 14px;font-size:.85rem;font-weight:700;margin-bottom:16px;display:none;}
 
 /* SIDEBAR */
-.sidebar{width:262px;background:var(--dark);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;}
+.sidebar{width:262px;background:var(--dark);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:200;transition:transform .25s ease;}
+.sb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:190;display:none;}
+.sidebar.open{transform:translateX(0);}
+.sb-backdrop.show{display:block;}
 .sl-brand{display:flex;align-items:center;gap:10px;}
 .sl-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .sl-text{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:800;color:white;}
@@ -80,10 +89,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 
 /* MAIN */
 .main-content{margin-left:262px;min-height:100vh;background:var(--bg-light);}
-.topbar{background:white;padding:15px 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,86,210,.06);}
+.topbar{background:white;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:120;box-shadow:0 2px 12px rgba(0,86,210,.06);gap:12px;}
+.tb-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.btn-ham{width:40px;height:40px;border-radius:12px;border:2px solid #EEF2F8;background:white;color:var(--dark);display:none;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
+.btn-ham:hover{border-color:var(--border);box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-1px);}
 .topbar-title{font-family:'Baloo 2',cursive;font-size:1.22rem;font-weight:800;color:var(--dark);}
 .topbar-sub{font-size:.77rem;color:var(--text-muted);font-weight:600;}
-.pcontent{padding:26px 30px;}
+.pcontent{padding:18px 16px;}
 .page{display:none;animation:fadeIn .3s ease;}
 .page.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
@@ -182,7 +194,15 @@ textarea.inp-fc{resize:none;}
 .loading-box{background:white;border-radius:20px;padding:32px 40px;text-align:center;}
 .loading-box .big-spin{width:48px;height:48px;border:4px solid #EEF2F8;border-radius:50%;border-top-color:var(--primary);animation:spin .7s linear infinite;margin:0 auto 16px;}
 
-@media(max-width:768px){.sidebar{transform:translateX(-262px);}.main-content{margin-left:0;}}
+@media(min-width:992px){.auth-side{display:block;}}
+@media(max-width:992px){.auth-shell{max-width:520px;}.auth-card{max-width:none;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-262px);}
+  .main-content{margin-left:0;}
+  .btn-ham{display:flex;}
+  .topbar{padding:12px 14px;}
+  .pcontent{padding:14px 12px;}
+}
 </style>
 </head>
 <body>
@@ -203,7 +223,24 @@ textarea.inp-fc{resize:none;}
   <div class="float-el" style="bottom:14%;left:11%;animation-delay:1.4s;">🍜</div>
   <div class="float-el" style="bottom:22%;right:7%;animation-delay:.3s;">🦐</div>
 
-  <div class="auth-card">
+  <div class="auth-shell">
+    <div class="auth-side">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🍱</div>
+        <div style="font-family:'Baloo 2',cursive;font-weight:900;font-size:1.25rem;">FSI DDS</div>
+      </div>
+      <h1>Đặt cơm nhanh<br>ăn ngon mỗi ngày</h1>
+      <p>Chọn đúng 2 món, theo dõi đơn, thống kê và thanh toán rõ ràng. Giao diện tối ưu cho cả Windows và điện thoại.</p>
+      <div class="food-pills">
+        <div class="food-pill">🍲 Menu hôm nay</div>
+        <div class="food-pill">🧾 Hóa đơn PDF</div>
+        <div class="food-pill">📅 Lịch suất cơm</div>
+        <div class="food-pill">💳 Audit thanh toán</div>
+      </div>
+      <div style="margin-top:22px;opacity:.9;font-weight:800;">Tip: Render free có thể “ngủ” — lần đầu mở sẽ chậm ~30s.</div>
+    </div>
+
+    <div class="auth-card">
     <div class="brand-logo">
       <div class="brand-icon brand-icon-wide"><img class="logo-img" src="assets/logo.png" alt="FSI DDS"></div>
     </div>
@@ -221,6 +258,7 @@ textarea.inp-fc{resize:none;}
     <button class="btn-pf" id="loginBtn" onclick="doLogin()"><i class="fas fa-sign-in-alt me-2"></i>ĐĂNG NHẬP</button>
     <div class="auth-switch">Chưa có tài khoản? <a onclick="showRegister()">Đăng ký ngay</a></div>
   </div>
+  </div>
 </div>
 
 <!-- REGISTER -->
@@ -228,7 +266,22 @@ textarea.inp-fc{resize:none;}
   <div class="float-el" style="top:10%;right:8%;">🍱</div>
   <div class="float-el" style="bottom:16%;left:10%;animation-delay:1s;">🥘</div>
 
-  <div class="auth-card">
+  <div class="auth-shell">
+    <div class="auth-side">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🥗</div>
+        <div style="font-family:'Baloo 2',cursive;font-weight:900;font-size:1.25rem;">FSI DDS</div>
+      </div>
+      <h1>Tạo tài khoản<br>vào đặt cơm ngay</h1>
+      <p>Mỗi suất gồm 2 món, giá 40.000đ. Admin quản lý menu và xuất báo cáo dễ dàng.</p>
+      <div class="food-pills">
+        <div class="food-pill">✅ Đăng ký nhanh</div>
+        <div class="food-pill">🍽️ Chọn món</div>
+        <div class="food-pill">📊 Theo dõi</div>
+      </div>
+    </div>
+
+    <div class="auth-card">
     <div class="brand-logo">
       <div class="brand-icon brand-icon-wide"><img class="logo-img" src="assets/logo.png" alt="FSI DDS"></div>
     </div>
@@ -253,10 +306,12 @@ textarea.inp-fc{resize:none;}
     <button class="btn-pf" id="regBtn" onclick="doRegister()"><i class="fas fa-user-plus me-2"></i>TẠO TÀI KHOẢN</button>
     <div class="auth-switch">Đã có tài khoản? <a onclick="showLogin()">Đăng nhập</a></div>
   </div>
+  </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="mainApp" style="display:none;min-height:100vh;">
+  <div class="sb-backdrop" id="sbBackdrop" onclick="closeSidebar()"></div>
   <div class="sidebar">
     <div style="padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07);">
       <div class="sl-brand"><div class="sl-icon"><img class="logo-img" src="assets/logo.png" alt="FSI DDS"></div><div class="sl-text">FSI DDS</div></div>
@@ -284,7 +339,13 @@ textarea.inp-fc{resize:none;}
 
   <div class="main-content">
     <div class="topbar">
-      <div><div class="topbar-title" id="pageTitle">Dashboard</div><div class="topbar-sub" id="pageDate"></div></div>
+      <div class="tb-left">
+        <button class="btn-ham" type="button" onclick="openSidebar()" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <div style="min-width:0;">
+          <div class="topbar-title" id="pageTitle">Dashboard</div>
+          <div class="topbar-sub" id="pageDate"></div>
+        </div>
+      </div>
       <div class="u-av" id="topAv" style="width:36px;height:36px;font-size:.8rem;">U</div>
     </div>
     <div class="pcontent">
@@ -641,7 +702,21 @@ async function doRegister(){
 
 function doLogout(){
   clearAuth(); CU=null; TOKEN=null;
+  closeSidebar();
   showLogin();
+}
+
+function openSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const bd=document.getElementById('sbBackdrop');
+  if(sb) sb.classList.add('open');
+  if(bd) bd.classList.add('show');
+}
+function closeSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const bd=document.getElementById('sbBackdrop');
+  if(sb) sb.classList.remove('open');
+  if(bd) bd.classList.remove('show');
 }
 
 async function initApp(){
@@ -676,6 +751,7 @@ function showPage(id){
   const pg=document.getElementById('page-'+id); if(pg) pg.classList.add('active');
   document.querySelectorAll('.slink').forEach(l=>{ if(l.getAttribute('onclick')&&l.getAttribute('onclick').includes(`'${id}'`)) l.classList.add('active'); });
   document.getElementById('pageTitle').textContent=TITLES[id]||id;
+  closeSidebar();
   if(id==='dashboard')  refreshDashboard();
   if(id==='orderPage')  refreshOrderPage();
   if(id==='myOrders')   refreshMyOrders();
