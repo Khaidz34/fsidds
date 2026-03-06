@@ -800,17 +800,16 @@ async function refreshMyOrders(){
   try{
     const mon=monthISO();
     const prev=prevMonthISO();
-    const [ordsCur, ordsPrev] = await Promise.all([
+    const [ordsCur, ordsPrev, payInfo] = await Promise.all([
       api('GET',`/api/orders/my?month=${mon}`),
-      api('GET',`/api/orders/my?month=${prev}`).catch(()=>[])
+      api('GET',`/api/orders/my?month=${prev}`).catch(()=>[]),
+      api('GET',`/api/payments/my?month=${mon}`).catch(()=>null)
     ]);
-    const pays=await api('GET',`/api/payments?month=${mon}`).catch(()=>[]);
 
     // Header cards
     document.getElementById('myS1').textContent=ordsCur.length;
     document.getElementById('myS2').textContent=(ordsCur.length*40000/1000)+'k';
-    const myPay=Array.isArray(pays)?pays.find(p=>p.userId===CU.id):null;
-    document.getElementById('myS3').textContent=myPay?.paid?'✅ Đã trả':'Chưa trả';
+    document.getElementById('myS3').textContent=payInfo?.paid?'✅ Đã trả':'Chưa trả';
 
     // Week daily stats (Mon..Sun), across month boundary if needed
     const ws=startOfWeekMonday(new Date());

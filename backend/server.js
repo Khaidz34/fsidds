@@ -388,6 +388,15 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Khi có đơn mới sau khi đã chốt thanh toán, tự động đưa trạng thái về "chưa thanh toán"
+    // bằng cách xóa bản ghi payments (nếu có) cho người được ăn trong tháng đó.
+    await supabase
+      .from('payments')
+      .delete()
+      .eq('user_id', parseInt(orderedFor))
+      .eq('month', month);
+
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -522,6 +531,29 @@ app.get('/api/payments', authMiddleware, adminMiddleware, async (req, res) => {
   }));
 
   res.json(result.sort((a, b) => b.count - a.count));
+});
+
+// Người dùng: trạng thái thanh toán của chính mình
+app.get('/api/payments/my', authMiddleware, async (req, res) => {
+  const month = req.query.month || new Date().toISOString().slice(0, 7);
+  try {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('paid_at')
+      .eq('user_id', req.user.id)
+      .eq('month', month);
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    if (!data || !data.length) {
+      return res.json({ month, paid: false, paidAt: null });
+    }
+
+    return res.json({ month, paid: true, paidAt: data[0].paid_at });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lỗi lấy trạng thái thanh toán' });
+  }
 });
 
 // ════════════════════════════════════════════════════════════
