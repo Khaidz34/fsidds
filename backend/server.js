@@ -727,7 +727,7 @@ app.post('/api/payments/mark-paid', authMiddleware, adminMiddleware, async (req,
         paid_total: paidTotal,
         paid_at: paidAt,
         confirmed_by: req.user.id
-      })
+      }, { onConflict: 'user_id,month' })
       .select()
       .single();
     if (up.error) return res.status(500).json({ error: up.error.message });
