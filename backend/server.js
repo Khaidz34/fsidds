@@ -524,6 +524,73 @@ app.get('/api/payments', authMiddleware, adminMiddleware, async (req, res) => {
   res.json(result.sort((a, b) => b.count - a.count));
 });
 
+// ════════════════════════════════════════════════════════════
+// INVOICE ROUTES
+// ════════════════════════════════════════════════════════════
+
+// Admin: dữ liệu hóa đơn theo tháng (để frontend xuất PDF)
+app.get('/api/invoices/month', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const month = req.query.month || new Date().toISOString().slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'Month không hợp lệ (định dạng YYYY-MM)' });
+    }
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id, date, price, created_at,
+        dish1:dish1_id(id, name),
+        dish2:dish2_id(id, name),
+        receiver:ordered_for(id, fullname)
+      `)
+      .eq('month', month)
+      .order('date', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    const map = {};
+    (data || []).forEach(o => {
+      const uid = o.receiver?.id;
+      if (!uid) return;
+      if (!map[uid]) {
+        map[uid] = {
+          userId: uid,
+          fullname: o.receiver.fullname,
+          count: 0,
+          total: 0,
+          orders: []
+        };
+      }
+      map[uid].count++;
+      map[uid].total += o.price || 0;
+      map[uid].orders.push({
+        id: o.id,
+        date: o.date,
+        created_at: o.created_at,
+        price: o.price || 0,
+        dish1: o.dish1 || null,
+        dish2: o.dish2 || null
+      });
+    });
+
+    const users = Object.values(map).sort((a, b) =>
+      (a.fullname || '').localeCompare((b.fullname || ''), 'vi')
+    );
+
+    res.json({
+      month,
+      unitPrice: 40000,
+      generatedAt: new Date().toISOString(),
+      users
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lỗi xuất hóa đơn' });
+  }
+});
+
 // Admin: xác nhận đã thanh toán
 app.post('/api/payments/mark-paid', authMiddleware, adminMiddleware, async (req, res) => {
   const { userId, month } = req.body;

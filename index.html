@@ -8,6 +8,10 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+<!-- PDF export (client-side) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.9/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.9/vfs_fonts.min.js"></script>
+
 <style>
 :root{
   --primary:#0056D2;--primary-light:#1a6fe8;--secondary:#00B894;
@@ -30,7 +34,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 .auth-card{background:white;border-radius:28px;padding:46px 44px;width:100%;max-width:430px;box-shadow:0 30px 80px rgba(0,0,0,0.22);position:relative;z-index:10;animation:slideUp .55s cubic-bezier(.22,.68,0,1.2);}
 @keyframes slideUp{from{opacity:0;transform:translateY(50px);}to{opacity:1;transform:translateY(0);}}
 .brand-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;}
-.brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 16px rgba(0,86,210,0.3);}
+.brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,86,210,0.3);overflow:hidden;}
+.logo-img{width:100%;height:100%;object-fit:contain;display:block;}
 .brand-name{font-family:'Baloo 2',cursive;font-size:1.7rem;font-weight:800;color:var(--dark);}
 .brand-name span{color:var(--primary);}
 .brand-sub{text-align:center;color:var(--text-muted);font-size:0.8rem;margin-bottom:28px;font-weight:600;}
@@ -53,7 +58,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 /* SIDEBAR */
 .sidebar{width:262px;background:var(--dark);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;}
 .sl-brand{display:flex;align-items:center;gap:10px;}
-.sl-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.sl-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .sl-text{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:800;color:white;}
 .sl-sub{font-size:.68rem;color:rgba(255,255,255,.33);margin-top:4px;padding-left:48px;}
 .sidebar-user{margin:14px 14px 0;background:rgba(255,255,255,.06);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
@@ -198,7 +203,7 @@ textarea.inp-fc{resize:none;}
   <div class="float-el" style="bottom:22%;right:7%;animation-delay:.3s;">🦐</div>
 
   <div class="auth-card">
-    <div class="brand-logo"><div class="brand-icon">🍱</div><div class="brand-name">FSI <span>DDS</span></div></div>
+    <div class="brand-logo"><div class="brand-icon"><img class="logo-img" src="assets/logo.svg" alt="FSI DDS"></div><div class="brand-name">FSI <span>DDS</span></div></div>
     <div class="brand-sub">HỆ THỐNG ĐẶT CƠM NỘI BỘ CÔNG TY FSI DDS</div>
     <div class="auth-error" id="loginError"></div>
     <div class="mb-3">
@@ -221,7 +226,7 @@ textarea.inp-fc{resize:none;}
   <div class="float-el" style="bottom:16%;left:10%;animation-delay:1s;">🥘</div>
 
   <div class="auth-card">
-    <div class="brand-logo"><div class="brand-icon">🍱</div><div class="brand-name">FSI <span>DDS</span></div></div>
+    <div class="brand-logo"><div class="brand-icon"><img class="logo-img" src="assets/logo.svg" alt="FSI DDS"></div><div class="brand-name">FSI <span>DDS</span></div></div>
     <div class="brand-sub">ĐĂNG KÝ TÀI KHOẢN MỚI</div>
     <div class="auth-error" id="regError"></div>
     <div class="mb-3">
@@ -249,7 +254,7 @@ textarea.inp-fc{resize:none;}
 <div id="mainApp" style="display:none;min-height:100vh;">
   <div class="sidebar">
     <div style="padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07);">
-      <div class="sl-brand"><div class="sl-icon">🍱</div><div class="sl-text">FSI DDS</div></div>
+      <div class="sl-brand"><div class="sl-icon"><img class="logo-img" src="assets/logo.svg" alt="FSI DDS"></div><div class="sl-text">FSI DDS</div></div>
       <div class="sl-sub">Hệ thống đặt cơm nội bộ</div>
     </div>
     <div class="sidebar-user">
@@ -266,6 +271,7 @@ textarea.inp-fc{resize:none;}
       <button class="slink admin-only" onclick="showPage('allOrders')"><span class="slink-ic">📦</span>Tất cả đơn <span class="bdg-pill" id="orderBadge">0</span></button>
       <button class="slink admin-only" onclick="showPage('statistics')"><span class="slink-ic">📈</span>Thống kê</button>
       <button class="slink admin-only" onclick="showPage('payment')"><span class="slink-ic">💰</span>Thanh toán</button>
+      <button class="slink admin-only" onclick="showPage('invoice')"><span class="slink-ic">🧾</span>Xuất hóa đơn PDF</button>
       <button class="slink admin-only" onclick="showPage('userMgmt')"><span class="slink-ic">👥</span>Quản lý tài khoản</button>
     </nav>
     <div class="sidebar-bot"><button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i>Đăng xuất</button></div>
@@ -339,6 +345,41 @@ textarea.inp-fc{resize:none;}
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-coins"></i></div><div><div class="stat-val" id="myS2">—</div><div class="stat-lbl">Chi phí tháng này</div></div></div></div>
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="myS3">—</div><div class="stat-lbl">Thanh toán tháng này</div></div></div></div>
         </div>
+        <div class="row g-3 mb-4">
+          <div class="col-lg-4">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">📅 Tuần này (theo ngày)</div></div>
+              <div style="overflow-x:auto;">
+                <table class="tbl">
+                  <thead><tr><th>Ngày</th><th>Suất</th></tr></thead>
+                  <tbody id="myWeekDailyBody"><tr><td colspan="2" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">🗓️ Tháng này (theo tuần)</div></div>
+              <div style="overflow-x:auto;">
+                <table class="tbl">
+                  <thead><tr><th>Tuần</th><th>Suất</th></tr></thead>
+                  <tbody id="myMonthWeeklyBody"><tr><td colspan="2" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">📊 So sánh 2 tháng gần nhất</div></div>
+              <div style="overflow-x:auto;">
+                <table class="tbl">
+                  <thead><tr><th>Tháng</th><th>Suất</th><th>Số tiền</th></tr></thead>
+                  <tbody id="myTwoMonthBody"><tr><td colspan="3" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="card-m"><div class="card-hd"><div class="card-hd-t">Lịch sử đặt cơm</div></div><div class="p-4" id="myOrderList"><div style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải...</div></div></div>
       </div>
 
@@ -394,6 +435,35 @@ textarea.inp-fc{resize:none;}
         <div id="payList"></div>
       </div>
 
+      <!-- XUẤT HÓA ĐƠN -->
+      <div id="page-invoice" class="page">
+        <div class="sec-title">🧾 Xuất hóa đơn PDF</div>
+        <div class="sec-sub">Tạo file PDF theo tháng, gồm menu từng người và số tiền</div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">Chọn tháng</div></div>
+              <div class="p-4">
+                <div class="mb-3">
+                  <div class="slbl">Tháng</div>
+                  <input class="inp-fc" type="month" id="invMonth">
+                </div>
+                <button class="btn-order w-100" id="invBtn" onclick="exportInvoicePDF()"><i class="fas fa-file-pdf me-2"></i>Xuất PDF</button>
+                <div style="font-size:.8rem;color:var(--text-muted);margin-top:10px;">
+                  Nếu PDF bị lỗi font, bạn có thể dùng nút <b>In</b> của trình duyệt để lưu PDF.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">Xem trước</div><span class="chip" id="invPreviewChip">—</span></div>
+              <div class="p-4" id="invPreview" style="color:var(--text-muted);">Chọn tháng và bấm “Xuất PDF”.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- QUẢN LÝ USER -->
       <div id="page-userMgmt" class="page">
         <div class="sec-title">👥 Quản lý tài khoản</div><div class="sec-sub">Danh sách người dùng trong hệ thống</div>
@@ -437,6 +507,30 @@ const clearAuth = () => { localStorage.removeItem('fsi_token'); localStorage.rem
 function ini(n){ return n.split(' ').map(w=>w[0]).join('').slice(-2).toUpperCase(); }
 function todayLong(){ return new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}); }
 function monthISO(){ return new Date().toISOString().slice(0,7); }
+function prevMonthISO(ref=new Date()){
+  const d=new Date(ref);
+  d.setDate(1);
+  d.setMonth(d.getMonth()-1);
+  return d.toISOString().slice(0,7);
+}
+function fmtDay(d){
+  return d.toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit'});
+}
+function startOfWeekMonday(ref=new Date()){
+  const d=new Date(ref);
+  const day=(d.getDay()+6)%7; // Mon=0..Sun=6
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()-day);
+  return d;
+}
+function endOfWeekSunday(ref=new Date()){
+  const s=startOfWeekMonday(ref);
+  const e=new Date(s);
+  e.setDate(e.getDate()+6);
+  e.setHours(23,59,59,999);
+  return e;
+}
+function ymd(d){ return new Date(d).toISOString().split('T')[0]; }
 
 function toast(msg, type='ok'){
   const icons={ok:'✅',err:'❌',warn:'⚠️',info:'ℹ️'};
@@ -561,7 +655,7 @@ async function initApp(){
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',userMgmt:'Quản lý tài khoản'};
+const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',invoice:'Xuất hóa đơn PDF',userMgmt:'Quản lý tài khoản'};
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.slink').forEach(l=>l.classList.remove('active'));
@@ -574,6 +668,7 @@ function showPage(id){
   if(id==='allOrders')  refreshAllOrders();
   if(id==='statistics') refreshStatistics();
   if(id==='payment')    refreshPayment();
+  if(id==='invoice')    refreshInvoice();
   if(id==='menuMgmt')   refreshMenuPreview();
   if(id==='userMgmt')   refreshUserMgmt();
 }
@@ -699,14 +794,68 @@ async function submitOrder(){
 async function refreshMyOrders(){
   try{
     const mon=monthISO();
-    const ords=await api('GET',`/api/orders/my?month=${mon}`);
+    const prev=prevMonthISO();
+    const [ordsCur, ordsPrev] = await Promise.all([
+      api('GET',`/api/orders/my?month=${mon}`),
+      api('GET',`/api/orders/my?month=${prev}`).catch(()=>[])
+    ]);
     const pays=await api('GET',`/api/payments?month=${mon}`).catch(()=>[]);
-    document.getElementById('myS1').textContent=ords.length;
-    document.getElementById('myS2').textContent=(ords.length*40000/1000)+'k';
+
+    // Header cards
+    document.getElementById('myS1').textContent=ordsCur.length;
+    document.getElementById('myS2').textContent=(ordsCur.length*40000/1000)+'k';
     const myPay=Array.isArray(pays)?pays.find(p=>p.userId===CU.id):null;
     document.getElementById('myS3').textContent=myPay?.paid?'✅ Đã trả':'Chưa trả';
+
+    // Week daily stats (Mon..Sun), across month boundary if needed
+    const ws=startOfWeekMonday(new Date());
+    const we=endOfWeekSunday(new Date());
+    const allForWeek=[...ordsCur, ...(Array.isArray(ordsPrev)?ordsPrev:[])].filter(o=>{
+      const t=new Date(o.date+'T00:00:00');
+      return t>=ws && t<=we;
+    });
+    const dayRows=[];
+    for(let i=0;i<7;i++){
+      const d=new Date(ws); d.setDate(ws.getDate()+i);
+      const key=ymd(d);
+      const c=allForWeek.filter(o=>o.date===key).length;
+      dayRows.push({label:fmtDay(d), count:c});
+    }
+    document.getElementById('myWeekDailyBody').innerHTML = dayRows.map(r=>`<tr><td style="font-weight:700;">${r.label}</td><td style="font-weight:800;color:var(--primary);">${r.count}</td></tr>`).join('');
+
+    // Month weekly stats (ranges Mon..Sun)
+    const m0=new Date(mon+'-01T00:00:00');
+    const mStart=new Date(m0); mStart.setHours(0,0,0,0);
+    const mEnd=new Date(m0); mEnd.setMonth(mEnd.getMonth()+1); mEnd.setDate(0); mEnd.setHours(23,59,59,999);
+    let cursor=startOfWeekMonday(mStart);
+    const weekRanges=[];
+    while(cursor<=mEnd){
+      const start=new Date(cursor);
+      const end=new Date(cursor); end.setDate(end.getDate()+6); end.setHours(23,59,59,999);
+      // only include ranges that intersect this month
+      const s2 = start < mStart ? mStart : start;
+      const e2 = end > mEnd ? mEnd : end;
+      const label = `${s2.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})}–${e2.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})}`;
+      const cnt = ordsCur.filter(o=>{
+        const t=new Date(o.date+'T00:00:00');
+        return t>=s2 && t<=e2;
+      }).length;
+      weekRanges.push({label, cnt});
+      cursor.setDate(cursor.getDate()+7);
+    }
+    document.getElementById('myMonthWeeklyBody').innerHTML = weekRanges.map((w,idx)=>`<tr><td style="font-weight:700;">Tuần ${idx+1} (${w.label})</td><td style="font-weight:800;color:var(--primary);">${w.cnt}</td></tr>`).join('') || '<tr><td colspan="2" style="text-align:center;padding:22px;color:var(--text-muted);">Chưa có dữ liệu</td></tr>';
+
+    // Two-month compare
+    const prevCount = Array.isArray(ordsPrev) ? ordsPrev.length : 0;
+    const twoRows = [
+      { mon: prev, count: prevCount, total: prevCount * 40000 },
+      { mon: mon,  count: ordsCur.length, total: ordsCur.length * 40000 }
+    ];
+    document.getElementById('myTwoMonthBody').innerHTML = twoRows.map(r=>`<tr><td style="font-weight:700;">${r.mon}</td><td style="font-weight:800;color:var(--primary);">${r.count}</td><td style="font-weight:800;color:var(--secondary);">${(r.total/1000)}k</td></tr>`).join('');
+
+    // History list (current month)
     const el=document.getElementById('myOrderList');
-    el.innerHTML=ords.length?ords.map(o=>`
+    el.innerHTML=ordsCur.length?ordsCur.map(o=>`
       <div class="order-hcard">
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-size:1.7rem;">🍽️</span>
@@ -833,6 +982,98 @@ async function markPaid(userId){
     toast(`Đã xác nhận thanh toán cho ${u?.fullname||'nhân viên'} ✅`);
     refreshPayment();
   } catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INVOICE (PDF)
+// ═══════════════════════════════════════════════════════════
+function refreshInvoice(){
+  const inp=document.getElementById('invMonth');
+  if(inp && !inp.value) inp.value = monthISO();
+  document.getElementById('invPreviewChip').textContent = inp?.value || '—';
+  document.getElementById('invPreview').innerHTML = 'Chọn tháng và bấm “Xuất PDF”.';
+}
+
+async function exportInvoicePDF(){
+  const month = document.getElementById('invMonth')?.value || monthISO();
+  const btn = document.getElementById('invBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang tạo...';
+  try{
+    const data = await api('GET', `/api/invoices/month?month=${month}`);
+    document.getElementById('invPreviewChip').textContent = data.month;
+
+    // Preview (HTML)
+    const totalAll = data.users.reduce((s,u)=>s+u.total,0);
+    document.getElementById('invPreview').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div><div style="font-weight:900;color:var(--dark);font-size:1.05rem;">Hóa đơn cơm tháng ${data.month}</div>
+        <div style="color:var(--text-muted);font-size:.82rem;">${data.users.length} người · Tổng: <b style="color:var(--primary);">${(totalAll/1000)}k</b></div></div>
+        <div style="color:var(--text-muted);font-size:.78rem;">Tạo lúc ${new Date(data.generatedAt).toLocaleString('vi-VN')}</div>
+      </div>
+      <div style="margin-top:12px;">${data.users.slice(0,6).map(u=>`
+        <div style="padding:10px 0;border-bottom:1px solid #F3F6FC;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div><div style="font-weight:800;">${u.fullname}</div>
+          <div style="font-size:.78rem;color:var(--text-muted);">${u.count} suất</div></div>
+          <div style="font-weight:900;color:var(--primary);">${(u.total/1000)}k</div>
+        </div>`).join('')}
+        ${data.users.length>6?`<div style="margin-top:10px;color:var(--text-muted);font-size:.8rem;">… và ${data.users.length-6} người khác</div>`:''}
+      </div>
+    `;
+
+    // PDF (pdfmake)
+    if(!window.pdfMake){ throw new Error('Thư viện PDF chưa tải xong'); }
+    const dd = {
+      pageSize: 'A4',
+      pageMargins: [32, 38, 32, 38],
+      content: [
+        { text: 'HÓA ĐƠN CƠM NỘI BỘ', fontSize: 16, bold: true, color: '#0D1B2A' },
+        { text: `Tháng: ${data.month}`, margin: [0, 4, 0, 10], color: '#7A8EA0' },
+        {
+          columns: [
+            { text: `Tổng người: ${data.users.length}`, color: '#0D1B2A' },
+            { text: `Tổng tiền: ${(totalAll/1000)}k`, alignment: 'right', bold: true, color: '#0056D2' }
+          ],
+          margin: [0, 0, 0, 12]
+        },
+        ...data.users.flatMap(u => ([
+          { text: u.fullname, fontSize: 12, bold: true, margin: [0, 8, 0, 2] },
+          { text: `${u.count} suất × 40.000đ = ${(u.total/1000)}k`, color: '#0056D2', margin: [0, 0, 0, 4] },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['auto', '*', '*', 'auto'],
+              body: [
+                ['Ngày', 'Món 1', 'Món 2', 'Giá'],
+                ...u.orders.map(o => [
+                  o.date,
+                  o.dish1?.name || '?',
+                  o.dish2?.name || '?',
+                  '40.000đ'
+                ])
+              ]
+            },
+            layout: 'lightHorizontalLines',
+            fontSize: 9
+          }
+        ]))
+      ],
+      styles: {
+        tableHeader: { bold: true }
+      },
+      defaultStyle: {
+        fontSize: 10
+      }
+    };
+
+    window.pdfMake.createPdf(dd).download(`hoa-don-com-${data.month}.pdf`);
+    toast('Đã xuất PDF ✅');
+  } catch(e){
+    toast('Lỗi xuất PDF: ' + e.message, 'err');
+  } finally{
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Xuất PDF';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

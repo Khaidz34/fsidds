@@ -72,7 +72,7 @@ ALTER TABLE orders   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE payments DISABLE ROW LEVEL SECURITY;
 
 -- ─── Seed admin mặc định ─────────────────────────────────
--- Password: admin123 (bcrypt hash)
+-- Password: password (bcrypt hash)
 INSERT INTO users (username, password, fullname, role)
 VALUES (
   'admin',
