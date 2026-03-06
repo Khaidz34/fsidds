@@ -383,6 +383,7 @@ textarea.inp-fc{resize:none;}
         <div class="sec-title">📦 Tất cả đơn hôm nay</div><div class="sec-sub">Danh sách đặt cơm toàn công ty</div>
         <div class="d-flex gap-2 mb-3">
           <button class="btn-order" style="padding:9px 18px;font-size:.83rem;" onclick="exportCSV()"><i class="fas fa-file-excel me-1"></i>Xuất CSV</button>
+          <button class="btn-order" style="padding:9px 18px;font-size:.83rem;background:#e74c3c;border:none;" onclick="exportOrdersPDF()"><i class="fas fa-file-pdf me-1"></i>Xuất menu hôm nay (PDF)</button>
           <button onclick="window.print()" style="padding:9px 18px;font-size:.83rem;background:white;border:2px solid var(--primary);border-radius:10px;color:var(--primary);font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;"><i class="fas fa-print me-1"></i>In</button>
         </div>
         <div class="card-m">
@@ -870,6 +871,46 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`doncom_fsi_${new Date().toISOString().split('T')[0]}.csv`; a.click();
   toast('Đã xuất CSV 📊');
+}
+
+function exportOrdersPDF(){
+  if(!cachedOrders.length){ toast('Không có đơn nào để xuất!','warn'); return; }
+  if(!window.pdfMake){ toast('Thư viện PDF chưa sẵn sàng','err'); return; }
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const body = [
+    ['#','Người ăn','Món 1','Món 2','Giờ']
+  ];
+  cachedOrders.forEach((o,i)=>{
+    body.push([
+      i+1,
+      o.receiver?.fullname||'?',
+      o.dish1?.name||'?',
+      o.dish2?.name||'?',
+      new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})
+    ]);
+  });
+
+  const dd = {
+    pageSize:'A4',
+    pageMargins:[24,32,24,32],
+    content:[
+      { text:'Danh sách đặt cơm hôm nay', fontSize:16, bold:true, color:'#0D1B2A' },
+      { text: dateStr, margin:[0,4,0,10], color:'#7A8EA0' },
+      {
+        table:{
+          headerRows:1,
+          widths:['auto','*','*','*','auto'],
+          body
+        },
+        layout:'lightHorizontalLines',
+        fontSize:9
+      }
+    ]
+  };
+  window.pdfMake.createPdf(dd).download(`menu-dat-com-${today.toISOString().split('T')[0]}.pdf`);
+  toast('Đã xuất PDF menu hôm nay ✅');
 }
 
 // ═══════════════════════════════════════════════════════════

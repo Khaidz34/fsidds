@@ -524,11 +524,19 @@ app.get('/api/payments', authMiddleware, adminMiddleware, async (req, res) => {
   const paidMap = {};
   (paymentsRes.data || []).forEach(p => { paidMap[p.user_id] = p; });
 
-  const result = Object.values(orderStats).map(s => ({
-    ...s,
-    paid: !!paidMap[s.userId],
-    paidAt: paidMap[s.userId]?.paid_at || null
-  }));
+  const result = Object.values(orderStats).map(s => {
+    const paidEntry = paidMap[s.userId];
+    const paid = !!paidEntry;
+    // Khi đã thanh toán, coi như số suất/số tiền còn lại trong tháng = 0
+    return {
+      userId: s.userId,
+      fullname: s.fullname,
+      count: paid ? 0 : s.count,
+      total: paid ? 0 : s.total,
+      paid,
+      paidAt: paidEntry?.paid_at || null
+    };
+  });
 
   res.json(result.sort((a, b) => b.count - a.count));
 });
