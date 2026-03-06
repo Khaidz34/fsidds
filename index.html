@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ Thống Đặt Cơm - FSI DDS</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#0056D2;--primary-light:#1a6fe8;--secondary:#00B894;
+  --accent:#FFC107;--danger:#e74c3c;--dark:#0D1B2A;
+  --text-muted:#7A8EA0;--bg-light:#F0F4FA;--border:#D6E2F5;
+  --shadow:0 8px 32px rgba(0,86,210,0.10);--shadow-hover:0 16px 48px rgba(0,86,210,0.18);
+  --radius:20px;--radius-sm:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px;}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;background:linear-gradient(135deg,#0056D2 0%,#0A84FF 50%,#00B4D8 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.auth-wrap::before{content:'';position:absolute;width:700px;height:700px;background:rgba(255,255,255,0.05);border-radius:50%;top:-250px;right:-200px;animation:floatBg 10s ease-in-out infinite;}
+.auth-wrap::after{content:'';position:absolute;width:500px;height:500px;background:rgba(255,255,255,0.05);border-radius:50%;bottom:-200px;left:-180px;animation:floatBg 7s ease-in-out infinite reverse;}
+@keyframes floatBg{0%,100%{transform:translateY(0)scale(1);}50%{transform:translateY(-30px)scale(1.05);}}
+.float-el{position:absolute;font-size:2.8rem;pointer-events:none;animation:floatEl 5s ease-in-out infinite;}
+@keyframes floatEl{0%,100%{transform:translateY(0)rotate(0deg);}50%{transform:translateY(-18px)rotate(8deg);}}
+.auth-card{background:white;border-radius:28px;padding:46px 44px;width:100%;max-width:430px;box-shadow:0 30px 80px rgba(0,0,0,0.22);position:relative;z-index:10;animation:slideUp .55s cubic-bezier(.22,.68,0,1.2);}
+@keyframes slideUp{from{opacity:0;transform:translateY(50px);}to{opacity:1;transform:translateY(0);}}
+.brand-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;}
+.brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 16px rgba(0,86,210,0.3);}
+.brand-name{font-family:'Baloo 2',cursive;font-size:1.7rem;font-weight:800;color:var(--dark);}
+.brand-name span{color:var(--primary);}
+.brand-sub{text-align:center;color:var(--text-muted);font-size:0.8rem;margin-bottom:28px;font-weight:600;}
+.form-label{font-weight:800;color:var(--dark);font-size:0.76rem;text-transform:uppercase;letter-spacing:.7px;}
+.inp-wrap{position:relative;}
+.inp-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.88rem;}
+.inp{border:2px solid #EEF2F8;border-radius:var(--radius-sm);padding:13px 16px 13px 44px;font-family:'Nunito',sans-serif;font-size:.93rem;transition:all .3s;background:#FAFBFD;width:100%;outline:none;color:var(--dark);}
+.inp:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(0,86,210,.09);background:white;}
+.btn-pf{background:linear-gradient(135deg,var(--primary),#0A84FF);border:none;border-radius:var(--radius-sm);padding:14px;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;color:white;width:100%;cursor:pointer;transition:all .3s;letter-spacing:.4px;}
+.btn-pf:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,86,210,.35);}
+.btn-pf:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.remember-row{display:flex;align-items:center;margin-bottom:16px;font-size:.85rem;}
+.remember-row label{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark);font-weight:600;}
+.remember-row input[type=checkbox]{accent-color:var(--primary);width:16px;height:16px;cursor:pointer;}
+.auth-switch{text-align:center;margin-top:20px;font-size:.87rem;color:var(--text-muted);}
+.auth-switch a{color:var(--primary);font-weight:800;cursor:pointer;text-decoration:none;}
+.auth-switch a:hover{text-decoration:underline;}
+.auth-error{background:#FEEFEF;color:var(--danger);border-radius:10px;padding:10px 14px;font-size:.85rem;font-weight:700;margin-bottom:16px;display:none;}
+
+/* SIDEBAR */
+.sidebar{width:262px;background:var(--dark);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;}
+.sl-brand{display:flex;align-items:center;gap:10px;}
+.sl-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.sl-text{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:800;color:white;}
+.sl-sub{font-size:.68rem;color:rgba(255,255,255,.33);margin-top:4px;padding-left:48px;}
+.sidebar-user{margin:14px 14px 0;background:rgba(255,255,255,.06);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.u-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#0A84FF);display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:.86rem;flex-shrink:0;}
+.u-nm{color:white;font-weight:800;font-size:.87rem;}
+.u-rl{color:rgba(255,255,255,.4);font-size:.71rem;}
+.sidebar-nav{padding:18px 0;flex:1;overflow-y:auto;}
+.nav-sec{padding:6px 22px 8px;font-size:.66rem;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.28);font-weight:800;}
+.slink{display:flex;align-items:center;gap:13px;padding:11px 22px;color:rgba(255,255,255,.55);font-weight:700;font-size:.87rem;transition:all .2s;border-left:3px solid transparent;cursor:pointer;background:none;border-top:none;border-right:none;border-bottom:none;width:100%;text-align:left;}
+.slink:hover{color:white;background:rgba(255,255,255,.05);}
+.slink.active{color:white;background:rgba(0,86,210,.2);border-left:3px solid var(--primary);}
+.slink-ic{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:.93rem;flex-shrink:0;transition:all .2s;}
+.slink.active .slink-ic{background:var(--primary);}
+.bdg-pill{margin-left:auto;background:var(--primary);color:white;font-size:.67rem;font-weight:800;padding:2px 8px;border-radius:20px;}
+.sidebar-bot{padding:14px;border-top:1px solid rgba(255,255,255,.07);}
+.btn-logout{display:flex;align-items:center;gap:9px;width:100%;padding:10px 14px;background:rgba(255,255,255,.05);border:none;border-radius:10px;color:rgba(255,255,255,.55);font-family:'Nunito',sans-serif;font-weight:700;font-size:.83rem;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:rgba(231,76,60,.18);color:#FF8080;}
+
+/* MAIN */
+.main-content{margin-left:262px;min-height:100vh;background:var(--bg-light);}
+.topbar{background:white;padding:15px 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,86,210,.06);}
+.topbar-title{font-family:'Baloo 2',cursive;font-size:1.22rem;font-weight:800;color:var(--dark);}
+.topbar-sub{font-size:.77rem;color:var(--text-muted);font-weight:600;}
+.pcontent{padding:26px 30px;}
+.page{display:none;animation:fadeIn .3s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* CARDS */
+.card-m{background:white;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;transition:all .3s;}
+.card-m:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px);}
+.card-hd{padding:18px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.card-hd-t{font-family:'Baloo 2',cursive;font-size:1.04rem;font-weight:800;color:var(--dark);}
+
+/* STATS */
+.stat-card{background:white;border-radius:var(--radius);padding:22px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow);border:1px solid var(--border);transition:all .3s;}
+.stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover);}
+.stat-ic{width:54px;height:54px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.ic-blue{background:#EBF3FF;color:var(--primary);}
+.ic-green{background:#E6FAF5;color:var(--secondary);}
+.ic-yellow{background:#FFF8E1;color:#F39C12;}
+.ic-red{background:#FEEFEF;color:var(--danger);}
+.stat-val{font-family:'Baloo 2',cursive;font-size:1.9rem;font-weight:800;color:var(--dark);line-height:1;}
+.stat-lbl{color:var(--text-muted);font-size:.81rem;font-weight:700;margin-top:3px;}
+
+/* DISH CARDS */
+.dish-card{background:white;border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:13px;border:2px solid #EEF2F8;cursor:pointer;transition:all .22s;margin-bottom:9px;}
+.dish-card:hover{border-color:var(--primary);background:#EBF3FF;transform:translateX(3px);}
+.dish-card.selected{border-color:var(--primary);background:linear-gradient(135deg,#EBF3FF,#F5F9FF);box-shadow:0 4px 16px rgba(0,86,210,.12);}
+.dish-card.maxed{opacity:.42;cursor:not-allowed;pointer-events:none;}
+.dish-cb{width:22px;height:22px;border-radius:6px;border:2px solid #CCC;flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:transparent;}
+.dish-card.selected .dish-cb{border-color:var(--primary);background:var(--primary);color:white;}
+.dish-num{width:26px;height:26px;border-radius:50%;background:#EEF2F8;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--text-muted);flex-shrink:0;}
+.dish-nm{font-weight:700;color:var(--dark);font-size:.91rem;}
+.dish-dc{font-size:.74rem;color:var(--text-muted);}
+.sel-pill{background:var(--primary);color:white;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:20px;}
+
+/* FORM */
+.slbl{font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:8px;}
+.sel{border:2px solid #EEF2F8;border-radius:var(--radius-sm);padding:12px 40px 12px 16px;font-family:'Nunito',sans-serif;font-size:.91rem;font-weight:700;color:var(--dark);background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230056D2' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 14px center;transition:all .3s;width:100%;appearance:none;outline:none;}
+.sel:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(0,86,210,.09);}
+.btn-order{background:linear-gradient(135deg,var(--primary),#0A84FF);border:none;border-radius:var(--radius-sm);padding:13px 26px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.94rem;color:white;cursor:pointer;transition:all .3s;}
+.btn-order:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,86,210,.35);}
+.btn-order:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;}
+.tbl thead th{background:linear-gradient(135deg,var(--primary),#0A84FF);color:white;font-weight:800;font-size:.77rem;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;border:none;}
+.tbl thead th:first-child{border-radius:14px 0 0 0;}.tbl thead th:last-child{border-radius:0 14px 0 0;}
+.tbl tbody tr{transition:all .2s;}.tbl tbody tr:hover{background:#F5F8FF;}
+.tbl tbody td{padding:12px 16px;border-bottom:1px solid #F3F6FC;font-size:.87rem;color:var(--dark);vertical-align:middle;}
+
+/* BADGES */
+.bdg-paid{background:#E6FAF5;color:#00967D;font-weight:700;padding:4px 11px;border-radius:20px;font-size:.77rem;}
+.bdg-dish{background:#EEF2F8;color:#555;font-weight:600;padding:3px 9px;border-radius:7px;font-size:.77rem;display:inline-block;margin:2px 1px;}
+.bdg-admin{background:#EBF3FF;color:var(--primary);font-weight:700;padding:3px 9px;border-radius:7px;font-size:.74rem;}
+.chip{background:#EBF3FF;color:var(--primary);font-weight:700;padding:4px 12px;border-radius:20px;font-size:.77rem;}
+
+/* PAYMENT */
+.pay-card{background:white;border-radius:var(--radius);padding:18px 22px;border:2px solid #EEF2F8;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;transition:all .3s;}
+.pay-card:hover{border-color:var(--border);box-shadow:var(--shadow);}
+.pay-card.paid{border-color:#00B894;background:#F5FFFC;opacity:.75;}
+.pay-name{font-weight:800;font-size:.96rem;color:var(--dark);}
+.pay-detail{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+.pay-amount{font-family:'Baloo 2',cursive;font-size:1.22rem;font-weight:800;color:var(--primary);}
+.btn-pay{background:var(--secondary);border:none;border-radius:10px;padding:8px 18px;color:white;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;}
+.btn-pay:hover{background:#009B7D;transform:translateY(-1px);}
+
+/* ORDER HISTORY */
+.order-hcard{background:white;border-radius:var(--radius-sm);padding:14px 18px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;transition:all .2s;}
+.order-hcard:hover{box-shadow:var(--shadow);transform:translateX(4px);}
+
+/* TOP DISH */
+.top-dish{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F3F6FC;}
+.rank-b{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0;}
+.r1{background:#FFD700;color:#886A00;}.r2{background:#C0C0C0;color:#555;}.r3{background:#CD7F32;color:#fff;}.rn{background:#F0F2F5;color:#888;}
+.bar-track{flex:1;height:7px;background:#F0F2F5;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--primary),#0A84FF);border-radius:4px;transition:width 1s ease;}
+.prog{height:9px;border-radius:5px;background:#EEF2F8;overflow:hidden;margin-top:6px;}
+.prog-bar{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--primary),#0A84FF);transition:width 1s ease;}
+
+/* TOAST */
+.toast-box{position:fixed;top:18px;right:18px;z-index:9999;}
+.toast-item{background:white;border-radius:var(--radius-sm);padding:14px 18px;box-shadow:0 12px 40px rgba(0,0,0,.14);display:flex;align-items:center;gap:12px;min-width:290px;margin-bottom:9px;animation:toastIn .4s ease;border-left:4px solid var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateX(100px);}to{opacity:1;transform:translateX(0);}}
+.toast-msg{font-weight:700;font-size:.87rem;color:var(--dark);}
+
+/* MISC */
+.sec-title{font-family:'Baloo 2',cursive;font-size:1.24rem;font-weight:800;color:var(--dark);margin-bottom:3px;}
+.sec-sub{color:var(--text-muted);font-size:.82rem;font-weight:600;margin-bottom:18px;}
+.inp-fc{border:2px solid #EEF2F8;border-radius:var(--radius-sm);padding:12px 16px;font-family:'Nunito',sans-serif;font-size:.91rem;width:100%;outline:none;transition:all .3s;background:#FAFBFD;color:var(--dark);}
+.inp-fc:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(0,86,210,.09);background:white;}
+textarea.inp-fc{resize:none;}
+
+/* LOADING SPINNER */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-radius:50%;border-top-color:white;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(13,27,42,.7);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.loading-box{background:white;border-radius:20px;padding:32px 40px;text-align:center;}
+.loading-box .big-spin{width:48px;height:48px;border:4px solid #EEF2F8;border-radius:50%;border-top-color:var(--primary);animation:spin .7s linear infinite;margin:0 auto 16px;}
+
+@media(max-width:768px){.sidebar{transform:translateX(-262px);}.main-content{margin-left:0;}}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="big-spin"></div>
+    <div style="font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:800;color:var(--dark);">FSI DDS</div>
+    <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Đang tải...</div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="auth-wrap" style="display:none;">
+  <div class="float-el" style="top:8%;left:7%;">🍗</div>
+  <div class="float-el" style="top:18%;right:9%;animation-delay:.7s;">🥗</div>
+  <div class="float-el" style="bottom:14%;left:11%;animation-delay:1.4s;">🍜</div>
+  <div class="float-el" style="bottom:22%;right:7%;animation-delay:.3s;">🦐</div>
+
+  <div class="auth-card">
+    <div class="brand-logo"><div class="brand-icon">🍱</div><div class="brand-name">FSI <span>DDS</span></div></div>
+    <div class="brand-sub">HỆ THỐNG ĐẶT CƠM NỘI BỘ CÔNG TY FSI DDS</div>
+    <div class="auth-error" id="loginError"></div>
+    <div class="mb-3">
+      <label class="form-label">Tên đăng nhập</label>
+      <div class="inp-wrap"><i class="fas fa-user inp-icon"></i><input class="inp" type="text" id="lg-user" placeholder="Nhập tên đăng nhập..."></div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu</label>
+      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="lg-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    </div>
+    <div class="remember-row"><label><input type="checkbox" id="rememberMe"> Nhớ mật khẩu</label></div>
+    <button class="btn-pf" id="loginBtn" onclick="doLogin()"><i class="fas fa-sign-in-alt me-2"></i>ĐĂNG NHẬP</button>
+    <div class="auth-switch">Chưa có tài khoản? <a onclick="showRegister()">Đăng ký ngay</a></div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="registerPage" class="auth-wrap" style="display:none;">
+  <div class="float-el" style="top:10%;right:8%;">🍱</div>
+  <div class="float-el" style="bottom:16%;left:10%;animation-delay:1s;">🥘</div>
+
+  <div class="auth-card">
+    <div class="brand-logo"><div class="brand-icon">🍱</div><div class="brand-name">FSI <span>DDS</span></div></div>
+    <div class="brand-sub">ĐĂNG KÝ TÀI KHOẢN MỚI</div>
+    <div class="auth-error" id="regError"></div>
+    <div class="mb-3">
+      <label class="form-label">Họ và tên</label>
+      <div class="inp-wrap"><i class="fas fa-id-card inp-icon"></i><input class="inp" type="text" id="rg-name" placeholder="Nhập họ và tên đầy đủ..."></div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Tên đăng nhập</label>
+      <div class="inp-wrap"><i class="fas fa-user inp-icon"></i><input class="inp" type="text" id="rg-user" placeholder="Không dấu, không khoảng trắng..."></div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu</label>
+      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass" placeholder="Ít nhất 6 ký tự..."></div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label">Xác nhận mật khẩu</label>
+      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass2" placeholder="Nhập lại mật khẩu..." onkeydown="if(event.key==='Enter')doRegister()"></div>
+    </div>
+    <button class="btn-pf" id="regBtn" onclick="doRegister()"><i class="fas fa-user-plus me-2"></i>TẠO TÀI KHOẢN</button>
+    <div class="auth-switch">Đã có tài khoản? <a onclick="showLogin()">Đăng nhập</a></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none;min-height:100vh;">
+  <div class="sidebar">
+    <div style="padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div class="sl-brand"><div class="sl-icon">🍱</div><div class="sl-text">FSI DDS</div></div>
+      <div class="sl-sub">Hệ thống đặt cơm nội bộ</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="u-av" id="sideAv">U</div>
+      <div><div class="u-nm" id="sideNm">...</div><div class="u-rl" id="sideRl">...</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-sec">Menu chính</div>
+      <button class="slink active" onclick="showPage('dashboard')"><span class="slink-ic">📊</span>Dashboard</button>
+      <button class="slink" onclick="showPage('orderPage')"><span class="slink-ic">🍽️</span>Đặt cơm hôm nay</button>
+      <button class="slink" onclick="showPage('myOrders')"><span class="slink-ic">📋</span>Đơn của tôi</button>
+      <div class="nav-sec admin-only" style="margin-top:10px;">Quản lý</div>
+      <button class="slink admin-only" onclick="showPage('menuMgmt')"><span class="slink-ic">📝</span>Đăng menu</button>
+      <button class="slink admin-only" onclick="showPage('allOrders')"><span class="slink-ic">📦</span>Tất cả đơn <span class="bdg-pill" id="orderBadge">0</span></button>
+      <button class="slink admin-only" onclick="showPage('statistics')"><span class="slink-ic">📈</span>Thống kê</button>
+      <button class="slink admin-only" onclick="showPage('payment')"><span class="slink-ic">💰</span>Thanh toán</button>
+      <button class="slink admin-only" onclick="showPage('userMgmt')"><span class="slink-ic">👥</span>Quản lý tài khoản</button>
+    </nav>
+    <div class="sidebar-bot"><button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i>Đăng xuất</button></div>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div><div class="topbar-title" id="pageTitle">Dashboard</div><div class="topbar-sub" id="pageDate"></div></div>
+      <div class="u-av" id="topAv" style="width:36px;height:36px;font-size:.8rem;">U</div>
+    </div>
+    <div class="pcontent">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active">
+        <div class="sec-title">Xin chào! 👋</div><div class="sec-sub">Tổng quan hệ thống hôm nay</div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3"><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-utensils"></i></div><div><div class="stat-val" id="st1">—</div><div class="stat-lbl">Suất cơm hôm nay</div></div></div></div>
+          <div class="col-md-3"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-users"></i></div><div><div class="stat-val" id="st2">—</div><div class="stat-lbl">Người đã đặt</div></div></div></div>
+          <div class="col-md-3"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-fire"></i></div><div><div class="stat-val" id="st3">—</div><div class="stat-lbl">Món phổ biến nhất</div></div></div></div>
+          <div class="col-md-3"><div class="stat-card"><div class="stat-ic ic-red"><i class="fas fa-coins"></i></div><div><div class="stat-val" id="st4">—</div><div class="stat-lbl">Doanh thu tháng</div></div></div></div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-7"><div class="card-m"><div class="card-hd"><div class="card-hd-t">🏆 Top món hôm nay</div></div><div class="p-4" id="topDishList"><div style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải...</div></div></div></div>
+          <div class="col-md-5"><div class="card-m"><div class="card-hd"><div class="card-hd-t">⏱️ Đơn gần đây</div></div><div class="p-3" id="recentOrders"><div style="text-align:center;color:var(--text-muted);padding:16px;">Đang tải...</div></div></div></div>
+        </div>
+      </div>
+
+      <!-- ĐẶT CƠM -->
+      <div id="page-orderPage" class="page">
+        <div class="sec-title">🍽️ Đặt cơm hôm nay</div><div class="sec-sub" id="orderSub"></div>
+        <div style="background:linear-gradient(135deg,#EBF3FF,#F5F9FF);border:2px solid var(--border);border-radius:16px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
+          <span style="font-size:1.8rem;">ℹ️</span>
+          <div><div style="font-weight:800;color:var(--dark);font-size:.95rem;">Quy tắc đặt cơm</div>
+          <div style="color:var(--text-muted);font-size:.83rem;margin-top:2px;">Mỗi suất = <b style="color:var(--primary);">đúng 2 món</b> · Giá cố định <b style="color:var(--primary);">40.000đ / suất</b></div></div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-7">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">📋 Chọn 2 món trong menu</div><span class="chip" id="menuChip"></span></div>
+              <div class="p-4" id="dishList"><div style="text-align:center;color:var(--text-muted);padding:30px;"><div style="font-size:3rem;">⏳</div><div style="margin-top:10px;">Đang tải menu...</div></div></div>
+              <div id="selCounter" style="display:none;padding:12px 22px;background:#F5F8FF;border-top:1px solid var(--border);">
+                <span style="font-size:.84rem;color:var(--text-muted);font-weight:600;">Đã chọn: <b id="selCountNum" style="color:var(--primary);">0</b>/2 món</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="card-m" style="position:sticky;top:80px;">
+              <div class="card-hd"><div class="card-hd-t">🛒 Thông tin đặt</div></div>
+              <div class="p-4">
+                <div class="mb-3"><div class="slbl">Đặt cho ai?</div><select class="sel" id="orderFor"></select></div>
+                <div class="mb-4 p-3" style="background:#F5F8FF;border-radius:12px;border:1px solid var(--border);min-height:80px;">
+                  <div class="slbl">2 Món đã chọn</div>
+                  <div id="selDishSummary"><div style="color:var(--text-muted);font-size:.84rem;margin-top:4px;">Chưa chọn đủ 2 món</div></div>
+                </div>
+                <div class="mb-4 p-3" style="background:linear-gradient(135deg,#EBF3FF,#F5F9FF);border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-weight:700;color:var(--text-muted);font-size:.85rem;">💰 Giá 1 suất</span>
+                  <span style="font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:800;color:var(--primary);">40.000đ</span>
+                </div>
+                <button class="btn-order w-100" id="orderBtn" onclick="submitOrder()"><i class="fas fa-check me-2"></i>ĐẶT CƠM NGAY</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ĐƠN CỦA TÔI -->
+      <div id="page-myOrders" class="page">
+        <div class="sec-title">📋 Đơn cơm của tôi</div><div class="sec-sub">Lịch sử đặt cơm của bạn</div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-utensils"></i></div><div><div class="stat-val" id="myS1">—</div><div class="stat-lbl">Suất tháng này</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-coins"></i></div><div><div class="stat-val" id="myS2">—</div><div class="stat-lbl">Chi phí tháng này</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="myS3">—</div><div class="stat-lbl">Thanh toán tháng này</div></div></div></div>
+        </div>
+        <div class="card-m"><div class="card-hd"><div class="card-hd-t">Lịch sử đặt cơm</div></div><div class="p-4" id="myOrderList"><div style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải...</div></div></div>
+      </div>
+
+      <!-- ĐĂNG MENU -->
+      <div id="page-menuMgmt" class="page">
+        <div class="sec-title">📝 Quản lý Menu</div><div class="sec-sub">Đăng menu cơm hằng ngày cho nhân viên</div>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card-m"><div class="card-hd"><div class="card-hd-t">➕ Đăng menu hôm nay</div></div>
+              <div class="p-4">
+                <div class="mb-3"><div class="slbl">Tên các món (mỗi món 1 dòng)</div><textarea class="inp-fc" id="menuInput" rows="10" placeholder="Chân giò giả cầy&#10;Nem rế hải sản&#10;Sườn non sốt dứa&#10;..."></textarea></div>
+                <div class="mb-3"><div class="slbl">Ảnh menu (URL - tùy chọn)</div><input type="text" class="inp-fc" id="menuImgUrl" placeholder="https://..."></div>
+                <button class="btn-order w-100" id="postMenuBtn" onclick="postMenu()"><i class="fas fa-upload me-2"></i>ĐĂNG MENU</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-m"><div class="card-hd"><div class="card-hd-t">📋 Menu hiện tại</div></div><div class="p-4" id="menuPreview"><div style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải...</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TẤT CẢ ĐƠN -->
+      <div id="page-allOrders" class="page">
+        <div class="sec-title">📦 Tất cả đơn hôm nay</div><div class="sec-sub">Danh sách đặt cơm toàn công ty</div>
+        <div class="d-flex gap-2 mb-3">
+          <button class="btn-order" style="padding:9px 18px;font-size:.83rem;" onclick="exportCSV()"><i class="fas fa-file-excel me-1"></i>Xuất CSV</button>
+          <button onclick="window.print()" style="padding:9px 18px;font-size:.83rem;background:white;border:2px solid var(--primary);border-radius:10px;color:var(--primary);font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;"><i class="fas fa-print me-1"></i>In</button>
+        </div>
+        <div class="card-m">
+          <div class="card-hd"><div class="card-hd-t">Danh sách đơn</div><span class="chip" id="orderCount">0 đơn</span></div>
+          <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>#</th><th>Người đặt</th><th>Người ăn</th><th>2 Món</th><th>Giá</th><th>Giờ</th><th></th></tr></thead><tbody id="allOrdersBody"><tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- THỐNG KÊ -->
+      <div id="page-statistics" class="page">
+        <div class="sec-title">📈 Thống kê</div><div class="sec-sub">Báo cáo suất ăn theo tuần và tháng</div>
+        <div class="row g-3">
+          <div class="col-md-6"><div class="card-m"><div class="card-hd"><div class="card-hd-t">📅 Tuần này</div></div><div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Nhân viên</th><th>Suất</th><th>Tiến độ</th></tr></thead><tbody id="weekBody"><tr><td colspan="3" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div></div></div>
+          <div class="col-md-6"><div class="card-m"><div class="card-hd"><div class="card-hd-t">🗓️ Tháng này</div></div><div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Nhân viên</th><th>Suất</th><th>Số tiền</th></tr></thead><tbody id="monthBody"><tr><td colspan="3" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div></div></div>
+        </div>
+      </div>
+
+      <!-- THANH TOÁN -->
+      <div id="page-payment" class="page">
+        <div class="sec-title">💰 Quản lý thanh toán</div><div class="sec-sub">Xác nhận thanh toán cơm hàng tháng</div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-money-bill"></i></div><div><div class="stat-val" id="payTotal">—</div><div class="stat-lbl">Tổng tiền tháng này</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="payPaid">—</div><div class="stat-lbl">Đã thanh toán</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-clock"></i></div><div><div class="stat-val" id="payUnpaid">—</div><div class="stat-lbl">Chưa thanh toán</div></div></div></div>
+        </div>
+        <div id="payList"></div>
+      </div>
+
+      <!-- QUẢN LÝ USER -->
+      <div id="page-userMgmt" class="page">
+        <div class="sec-title">👥 Quản lý tài khoản</div><div class="sec-sub">Danh sách người dùng trong hệ thống</div>
+        <div class="card-m">
+          <div class="card-hd"><div class="card-hd-t">Danh sách tài khoản</div><span class="chip" id="userCount">—</span></div>
+          <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>#</th><th>Họ tên</th><th>Username</th><th>Vai trò</th><th>Thao tác</th></tr></thead><tbody id="userTBody"><tr><td colspan="5" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG — ĐỔI URL NÀY THÀNH URL RENDER CỦA BẠN
+// ═══════════════════════════════════════════════════════════
+const API = 'https://fsidds-backend.onrender.com'; // <-- ĐỔI SAU KHI DEPLOY
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let CU = null;
+let TOKEN = null;
+let menuData = null; // { id, date, dishes: [{id, name}] }
+let selDishes = []; // selected dish IDs (max 2)
+let allUsers = [];
+let cachedOrders = [];
+
+const EMOJIS = ['🍗','🐟','🦐','🥩','🍳','🥦','🥕','🍤','🥬','🌽','🦀','🥚','🫕','🍖','🧅'];
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+const getToken  = () => localStorage.getItem('fsi_token');
+const setToken  = t => localStorage.setItem('fsi_token', t);
+const clearAuth = () => { localStorage.removeItem('fsi_token'); localStorage.removeItem('fsi_remember'); };
+
+function ini(n){ return n.split(' ').map(w=>w[0]).join('').slice(-2).toUpperCase(); }
+function todayLong(){ return new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}); }
+function monthISO(){ return new Date().toISOString().slice(0,7); }
+
+function toast(msg, type='ok'){
+  const icons={ok:'✅',err:'❌',warn:'⚠️',info:'ℹ️'};
+  const colors={ok:'var(--primary)',err:'var(--danger)',warn:'var(--accent)',info:'var(--secondary)'};
+  const box=document.getElementById('toastBox');
+  const t=document.createElement('div');
+  t.className='toast-item'; t.style.borderLeftColor=colors[type]||colors.ok;
+  t.innerHTML=`<span style="font-size:1.18rem;">${icons[type]||'ℹ️'}</span><span class="toast-msg">${msg}</span>`;
+  box.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .5s'; t.style.opacity='0'; setTimeout(()=>t.remove(),500); },3500);
+}
+
+function loading(show){
+  document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════════════════════
+async function api(method, path, body){
+  const headers = { 'Content-Type': 'application/json' };
+  const tok = getToken();
+  if(tok) headers['Authorization'] = 'Bearer ' + tok;
+  const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error || 'Lỗi server');
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
+function showLogin(){
+  loading(false);
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('registerPage').style.display='none';
+  document.getElementById('mainApp').style.display='none';
+  // load remembered
+  const r = JSON.parse(localStorage.getItem('fsi_remember')||'null');
+  if(r){ document.getElementById('lg-user').value=r.u||''; document.getElementById('lg-pass').value=r.p||''; document.getElementById('rememberMe').checked=true; }
+}
+function showRegister(){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('registerPage').style.display='flex';
+  document.getElementById('regError').style.display='none';
+}
+
+async function doLogin(){
+  const u=document.getElementById('lg-user').value.trim();
+  const p=document.getElementById('lg-pass').value.trim();
+  const errEl=document.getElementById('loginError');
+  const btn=document.getElementById('loginBtn');
+  errEl.style.display='none';
+  if(!u||!p){ errEl.textContent='Vui lòng nhập đầy đủ thông tin!'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang đăng nhập...';
+  try{
+    const data = await api('POST','/api/auth/login',{username:u,password:p});
+    setToken(data.token);
+    if(document.getElementById('rememberMe').checked) localStorage.setItem('fsi_remember',JSON.stringify({u,p}));
+    else localStorage.removeItem('fsi_remember');
+    CU = data.user; TOKEN = data.token;
+    await initApp();
+  } catch(e){
+    errEl.textContent=e.message; errEl.style.display='block';
+  } finally{
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt me-2"></i>ĐĂNG NHẬP';
+  }
+}
+
+async function doRegister(){
+  const name=document.getElementById('rg-name').value.trim();
+  const user=document.getElementById('rg-user').value.trim();
+  const pass=document.getElementById('rg-pass').value.trim();
+  const pass2=document.getElementById('rg-pass2').value.trim();
+  const errEl=document.getElementById('regError');
+  const btn=document.getElementById('regBtn');
+  errEl.style.display='none';
+  if(!name||!user||!pass||!pass2){ errEl.textContent='Vui lòng điền đầy đủ!'; errEl.style.display='block'; return; }
+  if(/\s/.test(user)){ errEl.textContent='Tên đăng nhập không được có khoảng trắng!'; errEl.style.display='block'; return; }
+  if(pass.length<6){ errEl.textContent='Mật khẩu phải có ít nhất 6 ký tự!'; errEl.style.display='block'; return; }
+  if(pass!==pass2){ errEl.textContent='Mật khẩu xác nhận không khớp!'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang tạo...';
+  try{
+    const data = await api('POST','/api/auth/register',{username:user,password:pass,fullname:name});
+    setToken(data.token); CU=data.user; TOKEN=data.token;
+    toast(`Đăng ký thành công! Chào mừng ${name} 🎉`);
+    await initApp();
+  } catch(e){
+    errEl.textContent=e.message; errEl.style.display='block';
+  } finally{
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-user-plus me-2"></i>TẠO TÀI KHOẢN';
+  }
+}
+
+function doLogout(){
+  clearAuth(); CU=null; TOKEN=null;
+  showLogin();
+}
+
+async function initApp(){
+  loading(true);
+  try{
+    // Load users list
+    allUsers = await api('GET','/api/users');
+    // Setup UI
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('registerPage').style.display='none';
+    document.getElementById('mainApp').style.display='flex';
+    document.getElementById('sideAv').textContent=ini(CU.fullname);
+    document.getElementById('sideNm').textContent=CU.fullname;
+    document.getElementById('sideRl').textContent=CU.role==='admin'?'Quản trị viên':'Nhân viên';
+    document.getElementById('topAv').textContent=ini(CU.fullname);
+    document.getElementById('pageDate').textContent=todayLong();
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display=CU.role==='admin'?'':'none');
+    fillOrderFor();
+    showPage('dashboard');
+  } finally{
+    loading(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',userMgmt:'Quản lý tài khoản'};
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.slink').forEach(l=>l.classList.remove('active'));
+  const pg=document.getElementById('page-'+id); if(pg) pg.classList.add('active');
+  document.querySelectorAll('.slink').forEach(l=>{ if(l.getAttribute('onclick')&&l.getAttribute('onclick').includes(`'${id}'`)) l.classList.add('active'); });
+  document.getElementById('pageTitle').textContent=TITLES[id]||id;
+  if(id==='dashboard')  refreshDashboard();
+  if(id==='orderPage')  refreshOrderPage();
+  if(id==='myOrders')   refreshMyOrders();
+  if(id==='allOrders')  refreshAllOrders();
+  if(id==='statistics') refreshStatistics();
+  if(id==='payment')    refreshPayment();
+  if(id==='menuMgmt')   refreshMenuPreview();
+  if(id==='userMgmt')   refreshUserMgmt();
+}
+
+function fillOrderFor(){
+  const sel=document.getElementById('orderFor');
+  sel.innerHTML='<option value="">-- Chọn người ăn --</option>';
+  allUsers.forEach(u=>{ const o=document.createElement('option'); o.value=u.id; o.textContent=u.id===CU.id?`${u.fullname} (Tôi)`:u.fullname; sel.appendChild(o); });
+  sel.value=CU.id;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════
+async function refreshDashboard(){
+  try{
+    const dash = await api('GET','/api/stats/dashboard');
+    document.getElementById('st1').textContent=dash.todayCount;
+    document.getElementById('st2').textContent=dash.uniquePeople;
+    document.getElementById('st3').textContent=dash.topDishes[0]?.name?.split(' ').slice(0,2).join(' ')||'—';
+    document.getElementById('st4').textContent=(dash.monthRevenue/1000)+'k';
+    // Top dishes
+    const topEl=document.getElementById('topDishList');
+    if(!dash.topDishes.length){ topEl.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có dữ liệu hôm nay</div>'; }
+    else{
+      const maxV=dash.topDishes[0].count;
+      topEl.innerHTML=dash.topDishes.map((d,i)=>{
+        const rcs=['r1','r2','r3','rn','rn','rn'][i];
+        const emoji=menuData?.dishes?.[i]?EMOJIS[i%EMOJIS.length]:EMOJIS[i%EMOJIS.length];
+        return `<div class="top-dish"><div class="rank-b ${rcs}">${i+1}</div><span style="font-size:1.3rem;">${emoji}</span><div style="flex:1;"><div style="font-weight:700;font-size:.87rem;">${d.name}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.count/maxV*100)}%"></div></div></div><div style="font-weight:800;color:var(--primary);">${d.count} lượt</div></div>`;
+      }).join('');
+    }
+    // Recent orders
+    const ords = await api('GET','/api/orders/today');
+    const recEl=document.getElementById('recentOrders');
+    recEl.innerHTML=ords.slice(0,5).map(o=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F3F6FC;">
+        <span style="font-size:1.2rem;">🍽️</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:.82rem;">${o.dish1?.name||'?'} + ${o.dish2?.name||'?'}</div><div style="font-size:.72rem;color:var(--text-muted);">${o.receiver?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div></div>
+        <div style="font-weight:800;color:var(--primary);font-size:.82rem;">40k</div>
+      </div>`).join('') || '<div style="text-align:center;color:var(--text-muted);padding:14px;">Chưa có đơn</div>';
+    document.getElementById('orderBadge').textContent=ords.length;
+  } catch(e){ toast('Lỗi tải dashboard: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ORDER PAGE
+// ═══════════════════════════════════════════════════════════
+async function refreshOrderPage(){
+  document.getElementById('orderSub').textContent=todayLong();
+  selDishes=[];
+  try{
+    menuData = await api('GET','/api/menu/today');
+    document.getElementById('menuChip').textContent=new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});
+    renderDishes();
+    fillOrderFor();
+  } catch(e){ toast('Lỗi tải menu: '+e.message,'err'); }
+}
+
+function renderDishes(){
+  const el=document.getElementById('dishList');
+  if(!menuData||!menuData.dishes.length){
+    el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px;"><div style="font-size:3rem;">📭</div><div style="margin-top:10px;">Admin chưa đăng menu hôm nay</div></div>';
+    document.getElementById('selCounter').style.display='none';
+    return;
+  }
+  const maxed=selDishes.length>=2;
+  el.innerHTML=menuData.dishes.map((d,i)=>{
+    const isSel=selDishes.includes(d.id);
+    const isDis=maxed&&!isSel;
+    return `<div class="dish-card ${isSel?'selected':''} ${isDis?'maxed':''}" onclick="toggleDish(${d.id})">
+      <div class="dish-cb">${isSel?'✓':''}</div>
+      <div class="dish-num">${i+1}</div>
+      <span style="font-size:1.45rem;">${EMOJIS[i%EMOJIS.length]}</span>
+      <div style="flex:1;"><div class="dish-nm">${d.name}</div><div class="dish-dc">Cơm + món này = 40.000đ</div></div>
+      ${isSel?`<span style="background:var(--primary);color:white;font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:20px;">✓</span>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('selCounter').style.display='flex';
+  document.getElementById('selCountNum').textContent=selDishes.length;
+  updateSelSummary();
+}
+
+function toggleDish(dishId){
+  if(selDishes.includes(dishId)){
+    selDishes=selDishes.filter(x=>x!==dishId);
+  } else {
+    if(selDishes.length>=2){ toast('Chỉ được chọn tối đa 2 món!','warn'); return; }
+    selDishes.push(dishId);
+  }
+  renderDishes();
+}
+
+function updateSelSummary(){
+  const sumEl=document.getElementById('selDishSummary');
+  if(!selDishes.length){ sumEl.innerHTML='<div style="color:var(--text-muted);font-size:.84rem;margin-top:4px;">Chưa chọn đủ 2 món</div>'; return; }
+  const names=selDishes.map(id=>{ const d=menuData.dishes.find(x=>x.id===id); return d?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:1.2rem;">${EMOJIS[menuData.dishes.indexOf(d)%EMOJIS.length]}</span><span style="font-weight:700;font-size:.9rem;">${d.name}</span></div>`:''; });
+  sumEl.innerHTML=names.join('');
+  if(selDishes.length<2) sumEl.innerHTML+=`<div style="color:var(--accent);font-size:.8rem;font-weight:700;margin-top:8px;">⚠️ Cần chọn thêm 1 món nữa</div>`;
+}
+
+async function submitOrder(){
+  if(selDishes.length!==2){ toast('Vui lòng chọn đúng 2 món!','warn'); return; }
+  const forId=parseInt(document.getElementById('orderFor').value);
+  if(!forId){ toast('Vui lòng chọn người ăn!','warn'); return; }
+  const btn=document.getElementById('orderBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang đặt...';
+  try{
+    await api('POST','/api/orders',{ dish1Id:selDishes[0], dish2Id:selDishes[1], orderedFor:forId });
+    const d1=menuData.dishes.find(x=>x.id===selDishes[0]);
+    const d2=menuData.dishes.find(x=>x.id===selDishes[1]);
+    const fu=allUsers.find(u=>u.id===forId);
+    toast(`✅ Đặt thành công (${d1?.name} + ${d2?.name}) cho ${fu?.fullname||''}!`);
+    selDishes=[];
+    renderDishes();
+  } catch(e){ toast('Lỗi đặt cơm: '+e.message,'err'); }
+  finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-check me-2"></i>ĐẶT CƠM NGAY'; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MY ORDERS
+// ═══════════════════════════════════════════════════════════
+async function refreshMyOrders(){
+  try{
+    const mon=monthISO();
+    const ords=await api('GET',`/api/orders/my?month=${mon}`);
+    const pays=await api('GET',`/api/payments?month=${mon}`).catch(()=>[]);
+    document.getElementById('myS1').textContent=ords.length;
+    document.getElementById('myS2').textContent=(ords.length*40000/1000)+'k';
+    const myPay=Array.isArray(pays)?pays.find(p=>p.userId===CU.id):null;
+    document.getElementById('myS3').textContent=myPay?.paid?'✅ Đã trả':'Chưa trả';
+    const el=document.getElementById('myOrderList');
+    el.innerHTML=ords.length?ords.map(o=>`
+      <div class="order-hcard">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:1.7rem;">🍽️</span>
+          <div><div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div></div>
+        </div>
+        <div style="text-align:right;"><div style="font-family:'Baloo 2',cursive;font-weight:800;color:var(--primary);">40k</div></div>
+      </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có đơn nào tháng này</div>';
+  } catch(e){ toast('Lỗi tải đơn: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ALL ORDERS
+// ═══════════════════════════════════════════════════════════
+async function refreshAllOrders(){
+  try{
+    const ords=await api('GET','/api/orders/today');
+    cachedOrders=ords;
+    document.getElementById('orderCount').textContent=`${ords.length} đơn`;
+    document.getElementById('orderBadge').textContent=ords.length;
+    const body=document.getElementById('allOrdersBody');
+    body.innerHTML=ords.length?ords.map((o,i)=>`
+      <tr>
+        <td style="font-weight:800;color:var(--primary);">${i+1}</td>
+        <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:800;color:white;">${ini(o.orderer?.fullname||'?')}</div>${o.orderer?.fullname||'?'}</div></td>
+        <td>${o.receiver?.fullname||'?'}</td>
+        <td><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></td>
+        <td><b style="color:var(--primary);">40.000đ</b></td>
+        <td style="color:var(--text-muted);">${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
+        <td><button onclick="delOrder(${o.id})" style="border:none;background:#FEEFEF;color:var(--danger);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.77rem;font-weight:700;">🗑️ Xóa</button></td>
+      </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-muted);">Chưa có đơn nào hôm nay</td></tr>';
+  } catch(e){ toast('Lỗi tải đơn: '+e.message,'err'); }
+}
+
+async function delOrder(id){
+  if(!confirm('Xóa đơn này?')) return;
+  try{ await api('DELETE',`/api/orders/${id}`); toast('Đã xóa đơn','info'); refreshAllOrders(); }
+  catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+function exportCSV(){
+  if(!cachedOrders.length){ toast('Không có đơn nào để xuất!','warn'); return; }
+  let csv='STT,Người đặt,Người ăn,Món 1,Món 2,Giá,Giờ\n';
+  cachedOrders.forEach((o,i)=>{ csv+=`${i+1},"${o.orderer?.fullname||'?'}","${o.receiver?.fullname||'?'}","${o.dish1?.name||'?'}","${o.dish2?.name||'?'}",40000,"${new Date(o.created_at).toLocaleTimeString('vi-VN')}"\n`; });
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`doncom_fsi_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+  toast('Đã xuất CSV 📊');
+}
+
+// ═══════════════════════════════════════════════════════════
+// MENU MGMT
+// ═══════════════════════════════════════════════════════════
+async function postMenu(){
+  const raw=document.getElementById('menuInput').value.trim();
+  const imgUrl=document.getElementById('menuImgUrl').value.trim();
+  if(!raw){ toast('Vui lòng nhập danh sách món!','warn'); return; }
+  const dishes=raw.split('\n').map(d=>d.trim()).filter(d=>d.length>0);
+  const btn=document.getElementById('postMenuBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang đăng...';
+  try{
+    menuData=await api('POST','/api/menu',{dishes,imageUrl:imgUrl});
+    toast(`Đã đăng menu ${dishes.length} món! ✅`);
+    refreshMenuPreview();
+  } catch(e){ toast('Lỗi đăng menu: '+e.message,'err'); }
+  finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-upload me-2"></i>ĐĂNG MENU'; }
+}
+
+async function refreshMenuPreview(){
+  try{
+    const m=await api('GET','/api/menu/today');
+    const el=document.getElementById('menuPreview');
+    if(!m.dishes.length){ el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px;"><div style="font-size:3rem;">📭</div><div>Chưa có menu hôm nay</div></div>'; return; }
+    el.innerHTML=`${m.imageUrl?`<img src="${m.imageUrl}" style="width:100%;border-radius:12px;margin-bottom:12px;" onerror="this.remove()">`:''}<div style="margin-bottom:8px;font-weight:800;color:var(--text-muted);font-size:.73rem;text-transform:uppercase;letter-spacing:1px;">MENU HÔM NAY</div>${m.dishes.map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F3F6FC;"><span style="font-weight:800;color:var(--primary);width:20px;">${i+1}</span><span>${EMOJIS[i%EMOJIS.length]}</span><span style="font-weight:600;">${d.name}</span></div>`).join('')}`;
+    document.getElementById('menuInput').value=m.dishes.map(d=>d.name).join('\n');
+    if(m.imageUrl) document.getElementById('menuImgUrl').value=m.imageUrl;
+  } catch(e){ document.getElementById('menuPreview').innerHTML='<div style="color:var(--text-muted);padding:16px;">Chưa có menu hôm nay</div>'; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATISTICS
+// ═══════════════════════════════════════════════════════════
+async function refreshStatistics(){
+  try{
+    const [week, month] = await Promise.all([
+      api('GET','/api/stats/week'),
+      api('GET',`/api/stats/month?month=${monthISO()}`)
+    ]);
+    const maxW=week[0]?.count||1;
+    document.getElementById('weekBody').innerHTML=week.length?week.map(x=>`<tr><td style="font-weight:700;">${x.fullname}</td><td style="font-weight:800;color:var(--primary);">${x.count} suất</td><td><div class="prog" style="width:130px;"><div class="prog-bar" style="width:${Math.round(x.count/maxW*100)}%"></div></div></td></tr>`).join(''):'<tr><td colspan="3" style="text-align:center;padding:22px;color:var(--text-muted);">Chưa có dữ liệu</td></tr>';
+    document.getElementById('monthBody').innerHTML=month.length?month.map(x=>`<tr><td style="font-weight:700;">${x.fullname}</td><td style="font-weight:800;color:var(--primary);">${x.count} suất</td><td style="font-weight:800;color:var(--secondary);">${(x.total/1000)}k</td></tr>`).join(''):'<tr><td colspan="3" style="text-align:center;padding:22px;color:var(--text-muted);">Chưa có dữ liệu</td></tr>';
+  } catch(e){ toast('Lỗi tải thống kê: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAYMENT
+// ═══════════════════════════════════════════════════════════
+async function refreshPayment(){
+  try{
+    const mon=monthISO();
+    const data=await api('GET',`/api/payments?month=${mon}`);
+    const total=data.reduce((s,x)=>s+x.total,0);
+    document.getElementById('payTotal').textContent=(total/1000)+'k';
+    document.getElementById('payPaid').textContent=data.filter(x=>x.paid).length;
+    document.getElementById('payUnpaid').textContent=data.filter(x=>!x.paid).length;
+    document.getElementById('payList').innerHTML=data.length?data.map(x=>`
+      <div class="pay-card ${x.paid?'paid':''}">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white;">${ini(x.fullname)}</div>
+          <div><div class="pay-name">${x.fullname}</div><div class="pay-detail">${x.count} suất × 40.000đ · ${mon}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="pay-amount">${(x.total/1000)}k</div>
+          ${x.paid?`<span class="bdg-paid">✔ Đã thanh toán</span>`:`<button class="btn-pay" onclick="markPaid(${x.userId})"><i class="fas fa-check me-1"></i>Đã thanh toán</button>`}
+        </div>
+      </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:40px;">Chưa có dữ liệu tháng này</div>';
+  } catch(e){ toast('Lỗi thanh toán: '+e.message,'err'); }
+}
+
+async function markPaid(userId){
+  try{
+    await api('POST','/api/payments/mark-paid',{userId,month:monthISO()});
+    const u=allUsers.find(x=>x.id===userId);
+    toast(`Đã xác nhận thanh toán cho ${u?.fullname||'nhân viên'} ✅`);
+    refreshPayment();
+  } catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// USER MGMT
+// ═══════════════════════════════════════════════════════════
+async function refreshUserMgmt(){
+  try{
+    allUsers=await api('GET','/api/users');
+    document.getElementById('userCount').textContent=`${allUsers.length} tài khoản`;
+    document.getElementById('userTBody').innerHTML=allUsers.map((u,i)=>`
+      <tr>
+        <td style="font-weight:800;color:var(--primary);">${i+1}</td>
+        <td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.68rem;color:white;">${ini(u.fullname)}</div><span style="font-weight:700;">${u.fullname}</span></div></td>
+        <td style="color:var(--text-muted);font-weight:600;">${u.username}</td>
+        <td><span class="${u.role==='admin'?'bdg-admin':'bdg-dish'}">${u.role==='admin'?'👑 Admin':'👤 Nhân viên'}</span></td>
+        <td>${u.id!==CU.id?`<button onclick="toggleRole(${u.id},'${u.role==='admin'?'user':'admin'}')" style="border:none;background:#EBF3FF;color:var(--primary);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.77rem;font-weight:700;margin-right:5px;">${u.role==='admin'?'→ User':'→ Admin'}</button><button onclick="delUser(${u.id})" style="border:none;background:#FEEFEF;color:var(--danger);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.77rem;font-weight:700;">🗑️ Xóa</button>`:'<span style="color:var(--text-muted);font-size:.79rem;">(Bạn)</span>'}</td>
+      </tr>`).join('');
+  } catch(e){ toast('Lỗi tải users: '+e.message,'err'); }
+}
+
+async function toggleRole(id, newRole){
+  try{ await api('PATCH',`/api/users/${id}/role`,{role:newRole}); toast('Đã đổi vai trò'); refreshUserMgmt(); allUsers=await api('GET','/api/users'); }
+  catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+async function delUser(id){
+  if(!confirm('Xóa tài khoản này?')) return;
+  try{ await api('DELETE',`/api/users/${id}`); toast('Đã xóa tài khoản','info'); refreshUserMgmt(); }
+  catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT — Auto login nếu còn token
+// ═══════════════════════════════════════════════════════════
+(async function init(){
+  const tok=getToken();
+  if(tok){
+    try{
+      const me=await api('GET','/api/auth/me');
+      CU=me; TOKEN=tok;
+      await initApp();
+      return;
+    } catch { clearAuth(); }
+  }
+  showLogin();
+})();
+</script>
+</body>
+</html>
