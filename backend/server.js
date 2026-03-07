@@ -191,11 +191,11 @@ app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
   }
 });
 
-// Reset password từ trang login (không cần auth, chỉ cần username + oldPassword)
+// Reset password từ trang login (không cần auth, không cần verify mật khẩu cũ)
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
-    const { username, oldPassword, newPassword } = req.body;
-    if (!username || !oldPassword || !newPassword) {
+    const { username, newPassword } = req.body;
+    if (!username || !newPassword) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
     }
     if (newPassword.length < 6) {
@@ -204,18 +204,13 @@ app.post('/api/auth/reset-password', async (req, res) => {
     // Tìm user by username
     const { data: users, error: findErr } = await supabase
       .from('users')
-      .select('id, password')
+      .select('id')
       .eq('username', username);
     if (findErr) throw findErr;
     if (!users || users.length === 0) {
       return res.status(401).json({ error: 'Tên đăng nhập không tồn tại' });
     }
     const user = users[0];
-    // So sánh mật khẩu cũ
-    const isValid = await bcrypt.compare(oldPassword, user.password);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Mật khẩu cũ không đúng' });
-    }
     // Update mật khẩu mới
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const { error: updateErr } = await supabase

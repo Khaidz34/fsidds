@@ -293,10 +293,6 @@ textarea.inp-fc{resize:none;}
       <div class="inp-wrap"><i class="fas fa-user inp-icon"></i><input class="inp" type="text" id="reset-user" placeholder="Nhập tên đăng nhập..."></div>
     </div>
     <div class="mb-3">
-      <label class="form-label">Mật khẩu cũ</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="reset-oldpass" placeholder="Nhập mật khẩu cũ..."></div>
-    </div>
-    <div class="mb-3">
       <label class="form-label">Mật khẩu mới</label>
       <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="reset-newpass" placeholder="Nhập mật khẩu mới..." style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordReset1()"><i class="fas fa-eye" id="reset-newpass-icon"></i></button></div>
     </div>
@@ -808,7 +804,6 @@ function showResetPassword(){
   document.getElementById('resetPasswordPage').style.display='flex';
   document.getElementById('resetError').style.display='none';
   document.getElementById('reset-user').value='';
-  document.getElementById('reset-oldpass').value='';
   document.getElementById('reset-newpass').value='';
   document.getElementById('reset-newpass2').value='';
 }
@@ -843,21 +838,20 @@ function togglePasswordReset2(){
 
 async function submitResetPassword(){
   const user=document.getElementById('reset-user').value.trim();
-  const oldpwd=document.getElementById('reset-oldpass').value.trim();
   const newpwd=document.getElementById('reset-newpass').value.trim();
   const newpwd2=document.getElementById('reset-newpass2').value.trim();
   const errEl=document.getElementById('resetError');
   const btn=document.getElementById('resetBtn');
   
   errEl.style.display='none';
-  if(!user||!oldpwd||!newpwd||!newpwd2){ errEl.textContent='Vui lòng điền đầy đủ!'; errEl.style.display='block'; return; }
+  if(!user||!newpwd||!newpwd2){ errEl.textContent='Vui lòng điền đầy đủ!'; errEl.style.display='block'; return; }
   if(newpwd.length<6){ errEl.textContent='Mật khẩu mới phải có ít nhất 6 ký tự!'; errEl.style.display='block'; return; }
   if(newpwd!==newpwd2){ errEl.textContent='Mật khẩu xác nhận không khớp!'; errEl.style.display='block'; return; }
   
   btn.disabled=true;
   btn.innerHTML='<span class="spinner"></span> Đang đổi...';
   try{
-    await api('POST','/api/auth/reset-password',{username:user,oldPassword:oldpwd,newPassword:newpwd});
+    await api('POST','/api/auth/reset-password',{username:user,newPassword:newpwd});
     alert('✅ Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.');
     showLogin();
   } catch(e){
@@ -867,7 +861,7 @@ async function submitResetPassword(){
     btn.disabled=false;
     btn.innerHTML='<i class="fas fa-refresh me-2"></i>ĐỔI MẬT KHẨU';
   }
-}
+}}
 
 async function doLogin(){
   const u=document.getElementById('lg-user').value.trim();
