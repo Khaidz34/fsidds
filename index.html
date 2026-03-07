@@ -409,7 +409,8 @@ textarea.inp-fc{resize:none;}
         <div class="row g-3 mb-4">
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-utensils"></i></div><div><div class="stat-val" id="myS1">—</div><div class="stat-lbl">Suất tháng này</div></div></div></div>
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-coins"></i></div><div><div class="stat-val" id="myS2">—</div><div class="stat-lbl">Chi phí tháng này</div></div></div></div>
-          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="myS3">—</div><div class="stat-lbl">Thanh toán tháng này</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="myS3">—</div><div class="stat-lbl">Đã thanh toán</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-red"><i class="fas fa-exclamation-circle"></i></div><div><div class="stat-val" id="myS4">—</div><div class="stat-lbl">Chưa thanh toán</div></div></div></div>
         </div>
         <div class="card-m mb-4">
           <div class="card-hd"><div class="card-hd-t">📅 Lịch suất cơm theo tháng</div></div>
@@ -896,8 +897,10 @@ async function refreshMyOrders(){
     // Header cards
     document.getElementById('myS1').textContent=ordsCur.length;
     document.getElementById('myS2').textContent=(ordsCur.length*40000/1000)+'k';
+    const paidAmount = payInfo?.paidTotal ?? 0;
     const remaining = payInfo?.remainingTotal !== undefined ? payInfo.remainingTotal : (ordsCur.length * 40000);
-    document.getElementById('myS3').textContent = remaining === 0 ? `Đã trả: ${(payInfo?.paidTotal / 1000)}k` : `Còn nợ: ${(remaining / 1000)}k`;
+    document.getElementById('myS3').textContent=(paidAmount/1000)+'k';
+    document.getElementById('myS4').textContent=(remaining/1000)+'k';
 
     // Calendar view
     document.getElementById('myCalendar').innerHTML = buildMyCalendarHtml(mon, ordsCur);
