@@ -731,69 +731,6 @@ function showRegister(){
   document.getElementById('regError').style.display='none';
 }
 
-function showResetPassword(){
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('registerPage').style.display='none';
-  document.getElementById('resetPasswordPage').style.display='flex';
-  document.getElementById('resetError').style.display='none';
-  document.getElementById('reset-user').value='';
-  document.getElementById('reset-newpass').value='';
-  document.getElementById('reset-newpass2').value='';
-}
-
-function togglePasswordReset1(){
-  const inp=document.getElementById('reset-newpass');
-  const icon=document.getElementById('reset-newpass-icon');
-  if(inp.type==='password'){
-    inp.type='text';
-    icon.classList.remove('fa-eye');
-    icon.classList.add('fa-eye-slash');
-  } else {
-    inp.type='password';
-    icon.classList.remove('fa-eye-slash');
-    icon.classList.add('fa-eye');
-  }
-}
-
-function togglePasswordReset2(){
-  const inp=document.getElementById('reset-newpass2');
-  const icon=document.getElementById('reset-newpass2-icon');
-  if(inp.type==='password'){
-    inp.type='text';
-    icon.classList.remove('fa-eye');
-    icon.classList.add('fa-eye-slash');
-  } else {
-    inp.type='password';
-    icon.classList.remove('fa-eye-slash');
-    icon.classList.add('fa-eye');
-  }
-}
-
-async function submitResetPassword(){
-  const user=document.getElementById('reset-user').value.trim();
-  const newpwd=document.getElementById('reset-newpass').value.trim();
-  const newpwd2=document.getElementById('reset-newpass2').value.trim();
-  const errEl=document.getElementById('resetError');
-  const btn=document.getElementById('resetBtn');
-  
-  errEl.style.display='none';
-  if(!user||!newpwd||!newpwd2){ errEl.textContent='Vui lòng điền đầy đủ!'; errEl.style.display='block'; return; }
-  if(newpwd.length<6){ errEl.textContent='Mật khẩu mới phải có ít nhất 6 ký tự!'; errEl.style.display='block'; return; }
-  if(newpwd!==newpwd2){ errEl.textContent='Mật khẩu xác nhận không khớp!'; errEl.style.display='block'; return; }
-  
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span> Đang đổi...';
-  try{
-    await api('POST','/api/auth/reset-password',{username:user,newPassword:newpwd});
-    alert('✅ Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.');
-    showLogin();
-  } catch(e){
-    errEl.textContent=e.message;
-    errEl.style.display='block';
-  } finally{
-    btn.disabled=false;
-    btn.innerHTML='<i class="fas fa-refresh me-2"></i>ĐỔI MẬT KHẨU';
-
 async function doLogin(){
   const u=document.getElementById('lg-user').value.trim();
   const p=document.getElementById('lg-pass').value.trim();
