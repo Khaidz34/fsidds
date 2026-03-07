@@ -31,13 +31,15 @@ CREATE TABLE IF NOT EXISTS dishes (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. ORDERS (mỗi đơn = 1 suất = 2 món = 40k)
+-- 4. ORDERS (mỗi đơn = 1-2 món = 40k)
 CREATE TABLE IF NOT EXISTS orders (
   id          BIGSERIAL PRIMARY KEY,
   ordered_by  BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   ordered_for BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   dish1_id    BIGINT NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
-  dish2_id    BIGINT NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+  dish2_id    BIGINT REFERENCES dishes(id) ON DELETE CASCADE,  -- nullable: cho phép 1 món
+  notes       TEXT,  -- ghi chú: thêm cơm, canh, v.v.
+  rating      INT CHECK (rating >= 1 AND rating <= 5),  -- đánh giá 1-5 sao
   price       INT NOT NULL DEFAULT 40000,
   date        DATE NOT NULL,
   month       VARCHAR(7) NOT NULL,  -- format: 2024-03

@@ -252,7 +252,7 @@ textarea.inp-fc{resize:none;}
     </div>
     <div class="mb-3">
       <label class="form-label">Mật khẩu</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="lg-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="lg-pass" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordLogin()"><i class="fas fa-eye" id="lg-pass-icon"></i></button></div>
     </div>
     <div class="remember-row"><label><input type="checkbox" id="rememberMe"> Nhớ mật khẩu</label></div>
     <button class="btn-pf" id="loginBtn" onclick="doLogin()"><i class="fas fa-sign-in-alt me-2"></i>ĐĂNG NHẬP</button>
@@ -297,11 +297,11 @@ textarea.inp-fc{resize:none;}
     </div>
     <div class="mb-3">
       <label class="form-label">Mật khẩu</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass" placeholder="Ít nhất 6 ký tự..."></div>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass" placeholder="Ít nhất 6 ký tự..." style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordRegister()"><i class="fas fa-eye" id="rg-pass-icon"></i></button></div>
     </div>
     <div class="mb-4">
       <label class="form-label">Xác nhận mật khẩu</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass2" placeholder="Nhập lại mật khẩu..." onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass2" placeholder="Nhập lại mật khẩu..." onkeydown="if(event.key==='Enter')doRegister()" style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordRegisterConfirm()"><i class="fas fa-eye" id="rg-pass2-icon"></i></button></div>
     </div>
     <button class="btn-pf" id="regBtn" onclick="doRegister()"><i class="fas fa-user-plus me-2"></i>TẠO TÀI KHOẢN</button>
     <div class="auth-switch">Đã có tài khoản? <a onclick="showLogin()">Đăng nhập</a></div>

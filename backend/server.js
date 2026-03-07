@@ -171,6 +171,26 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   res.json(user);
 });
 
+// Đổi mật khẩu
+app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const { error } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('id', req.user.id);
+    if (error) throw error;
+    res.json({ success: true, message: 'Đổi mật khẩu thành công' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
 // ════════════════════════════════════════════════════════════
 // USERS ROUTES
 // ════════════════════════════════════════════════════════════
@@ -349,19 +369,22 @@ app.get('/api/orders/my', authMiddleware, async (req, res) => {
 // Đặt cơm (chọn 2 món)
 app.post('/api/orders', authMiddleware, async (req, res) => {
   try {
-    const { dish1Id, dish2Id, orderedFor } = req.body;
+    const { dish1Id, dish2Id, orderedFor, notes, rating } = req.body;
 
-    if (!dish1Id || !dish2Id) {
-      return res.status(400).json({ error: 'Vui lòng chọn đúng 2 món' });
+    if (!dish1Id) {
+      return res.status(400).json({ error: 'Vui lòng chọn ít nhất 1 món' });
     }
-    if (dish1Id === dish2Id) {
+    if (dish2Id && dish1Id === dish2Id) {
       return res.status(400).json({ error: '2 món phải khác nhau' });
     }
     if (!orderedFor) {
       return res.status(400).json({ error: 'Vui lòng chọn người ăn' });
     }
+    if (rating && (rating < 1 || rating > 5)) {
+      return res.status(400).json({ error: 'Đánh giá phải từ 1-5 sao' });
+    }
 
-    // Kiểm tra 2 món thuộc menu hôm nay
+    // Kiểm tra món(s) thuộc menu hôm nay
     const today = new Date().toISOString().split('T')[0];
     const { data: menu } = await supabase
       .from('menus')
@@ -373,13 +396,14 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Hôm nay chưa có menu' });
     }
 
+    const dishIds = dish2Id ? [dish1Id, dish2Id] : [dish1Id];
     const { data: validDishes } = await supabase
       .from('dishes')
       .select('id')
       .eq('menu_id', menu.id)
-      .in('id', [dish1Id, dish2Id]);
+      .in('id', dishIds);
 
-    if (!validDishes || validDishes.length !== 2) {
+    if (!validDishes || validDishes.length !== dishIds.length) {
       return res.status(400).json({ error: 'Món không hợp lệ' });
     }
 
@@ -392,13 +416,15 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
         ordered_by: req.user.id,
         ordered_for: parseInt(orderedFor),
         dish1_id: dish1Id,
-        dish2_id: dish2Id,
+        dish2_id: dish2Id || null,
+        notes: notes || null,
+        rating: rating || null,
         price: 40000,
         date: today,
         month
       })
       .select(`
-        id, price, date, created_at,
+        id, price, date, notes, rating, created_at,
         dish1:dish1_id(id, name),
         dish2:dish2_id(id, name),
         orderer:ordered_by(id, fullname),
