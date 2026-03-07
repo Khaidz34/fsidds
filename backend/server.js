@@ -191,40 +191,6 @@ app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
   }
 });
 
-// Reset password từ trang login (không cần auth, không cần verify mật khẩu cũ)
-app.post('/api/auth/reset-password', async (req, res) => {
-  try {
-    const { username, newPassword } = req.body;
-    if (!username || !newPassword) {
-      return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
-    }
-    // Tìm user by username
-    const { data: users, error: findErr } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', username);
-    if (findErr) throw findErr;
-    if (!users || users.length === 0) {
-      return res.status(401).json({ error: 'Tên đăng nhập không tồn tại' });
-    }
-    const user = users[0];
-    // Update mật khẩu mới
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const { error: updateErr } = await supabase
-      .from('users')
-      .update({ password: hashedPassword })
-      .eq('id', user.id);
-    if (updateErr) throw updateErr;
-    res.json({ success: true, message: 'Đổi mật khẩu thành công' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Lỗi server' });
-  }
-});
-
 // ════════════════════════════════════════════════════════════
 // USERS ROUTES
 // ════════════════════════════════════════════════════════════
