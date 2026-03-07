@@ -328,7 +328,7 @@ app.get('/api/orders/today', authMiddleware, async (req, res) => {
   let query = supabase
     .from('orders')
     .select(`
-      id, ordered_by, ordered_for, price, created_at,
+      id, ordered_by, ordered_for, price, date, notes, rating, created_at,
       dish1:dish1_id(id, name),
       dish2:dish2_id(id, name),
       orderer:ordered_by(id, fullname),
@@ -352,7 +352,7 @@ app.get('/api/orders/my', authMiddleware, async (req, res) => {
   const { data, error } = await supabase
     .from('orders')
     .select(`
-      id, ordered_by, ordered_for, price, date, created_at,
+      id, ordered_by, ordered_for, price, date, notes, rating, created_at,
       dish1:dish1_id(id, name),
       dish2:dish2_id(id, name),
       orderer:ordered_by(id, fullname)
@@ -769,6 +769,36 @@ app.post('/api/payments/mark-paid', authMiddleware, adminMiddleware, async (req,
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Lỗi xác nhận thanh toán' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// REVIEWS ROUTES
+// ════════════════════════════════════════════════════════════
+
+// Admin: Lấy tất cả đánh giá hôm nay
+app.get('/api/reviews/today', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id, date, rating, notes, created_at,
+        receiver:ordered_for(id, fullname),
+        dish1:dish1_id(id, name),
+        dish2:dish2_id(id, name),
+        orderer:ordered_by(id, fullname)
+      `)
+      .eq('date', today)
+      .not('rating', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lỗi lấy đánh giá' });
   }
 });
 
