@@ -8,6 +8,10 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+<!-- PDF export (client-side) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.9/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.9/vfs_fonts.min.js"></script>
+
 <style>
 :root{
   --primary:#0056D2;--primary-light:#1a6fe8;--secondary:#00B894;
@@ -21,16 +25,24 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px;}
 
 /* AUTH */
-.auth-wrap{min-height:100vh;background:linear-gradient(135deg,#0056D2 0%,#0A84FF 50%,#00B4D8 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.auth-wrap{min-height:100vh;background:radial-gradient(1200px 800px at 15% 10%, rgba(255,193,7,.28) 0%, rgba(255,193,7,0) 55%), radial-gradient(900px 700px at 85% 20%, rgba(0,184,148,.22) 0%, rgba(0,184,148,0) 52%), linear-gradient(135deg,#0056D2 0%,#0A84FF 55%,#00B4D8 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:24px;}
 .auth-wrap::before{content:'';position:absolute;width:700px;height:700px;background:rgba(255,255,255,0.05);border-radius:50%;top:-250px;right:-200px;animation:floatBg 10s ease-in-out infinite;}
 .auth-wrap::after{content:'';position:absolute;width:500px;height:500px;background:rgba(255,255,255,0.05);border-radius:50%;bottom:-200px;left:-180px;animation:floatBg 7s ease-in-out infinite reverse;}
 @keyframes floatBg{0%,100%{transform:translateY(0)scale(1);}50%{transform:translateY(-30px)scale(1.05);}}
 .float-el{position:absolute;font-size:2.8rem;pointer-events:none;animation:floatEl 5s ease-in-out infinite;}
 @keyframes floatEl{0%,100%{transform:translateY(0)rotate(0deg);}50%{transform:translateY(-18px)rotate(8deg);}}
-.auth-card{background:white;border-radius:28px;padding:46px 44px;width:100%;max-width:430px;box-shadow:0 30px 80px rgba(0,0,0,0.22);position:relative;z-index:10;animation:slideUp .55s cubic-bezier(.22,.68,0,1.2);}
+.auth-shell{width:100%;max-width:980px;display:flex;gap:18px;align-items:stretch;position:relative;z-index:10;}
+.auth-side{flex:1;min-height:520px;border-radius:28px;padding:34px 34px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(10px);box-shadow:0 22px 70px rgba(0,0,0,.20);color:white;display:none;}
+.auth-side h1{font-family:'Baloo 2',cursive;font-weight:900;font-size:2.1rem;line-height:1.15;margin:6px 0 10px;}
+.auth-side p{opacity:.9;font-weight:700;max-width:420px;}
+.food-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.food-pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);padding:8px 12px;border-radius:999px;font-weight:800;font-size:.82rem;}
+.auth-card{background:white;border-radius:28px;padding:38px 34px;width:100%;max-width:460px;box-shadow:0 30px 80px rgba(0,0,0,0.22);position:relative;animation:slideUp .55s cubic-bezier(.22,.68,0,1.2);}
 @keyframes slideUp{from{opacity:0;transform:translateY(50px);}to{opacity:1;transform:translateY(0);}}
 .brand-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;}
-.brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 16px rgba(0,86,210,0.3);}
+.brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,86,210,0.3);overflow:hidden;}
+.logo-img{width:100%;height:100%;object-fit:contain;display:block;}
+.brand-icon-wide{width:240px;height:64px;border-radius:16px;background:white;border:1px solid #EEF2F8;box-shadow:0 10px 30px rgba(0,0,0,0.10);padding:6px;}
 .brand-name{font-family:'Baloo 2',cursive;font-size:1.7rem;font-weight:800;color:var(--dark);}
 .brand-name span{color:var(--primary);}
 .brand-sub{text-align:center;color:var(--text-muted);font-size:0.8rem;margin-bottom:28px;font-weight:600;}
@@ -51,9 +63,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 .auth-error{background:#FEEFEF;color:var(--danger);border-radius:10px;padding:10px 14px;font-size:.85rem;font-weight:700;margin-bottom:16px;display:none;}
 
 /* SIDEBAR */
-.sidebar{width:262px;background:var(--dark);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;}
+.sidebar{width:262px;background:var(--dark);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:200;transition:transform .25s ease;}
+.sb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:190;display:none;}
+.sidebar.open{transform:translateX(0);}
+.sb-backdrop.show{display:block;}
 .sl-brand{display:flex;align-items:center;gap:10px;}
-.sl-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.sl-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .sl-text{font-family:'Baloo 2',cursive;font-size:1.15rem;font-weight:800;color:white;}
 .sl-sub{font-size:.68rem;color:rgba(255,255,255,.33);margin-top:4px;padding-left:48px;}
 .sidebar-user{margin:14px 14px 0;background:rgba(255,255,255,.06);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
@@ -74,10 +89,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-light);min-height:100vh
 
 /* MAIN */
 .main-content{margin-left:262px;min-height:100vh;background:var(--bg-light);}
-.topbar{background:white;padding:15px 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,86,210,.06);}
+.topbar{background:white;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:120;box-shadow:0 2px 12px rgba(0,86,210,.06);gap:12px;}
+.tb-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.btn-ham{width:40px;height:40px;border-radius:12px;border:2px solid #EEF2F8;background:white;color:var(--dark);display:none;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
+.btn-ham:hover{border-color:var(--border);box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-1px);}
 .topbar-title{font-family:'Baloo 2',cursive;font-size:1.22rem;font-weight:800;color:var(--dark);}
 .topbar-sub{font-size:.77rem;color:var(--text-muted);font-weight:600;}
-.pcontent{padding:26px 30px;}
+.pcontent{padding:18px 16px;}
 .page{display:none;animation:fadeIn .3s ease;}
 .page.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
@@ -176,7 +194,15 @@ textarea.inp-fc{resize:none;}
 .loading-box{background:white;border-radius:20px;padding:32px 40px;text-align:center;}
 .loading-box .big-spin{width:48px;height:48px;border:4px solid #EEF2F8;border-radius:50%;border-top-color:var(--primary);animation:spin .7s linear infinite;margin:0 auto 16px;}
 
-@media(max-width:768px){.sidebar{transform:translateX(-262px);}.main-content{margin-left:0;}}
+@media(min-width:992px){.auth-side{display:block;}}
+@media(max-width:992px){.auth-shell{max-width:520px;}.auth-card{max-width:none;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-262px);}
+  .main-content{margin-left:0;}
+  .btn-ham{display:flex;}
+  .topbar{padding:12px 14px;}
+  .pcontent{padding:14px 12px;}
+}
 </style>
 </head>
 <body>
@@ -197,8 +223,27 @@ textarea.inp-fc{resize:none;}
   <div class="float-el" style="bottom:14%;left:11%;animation-delay:1.4s;">🍜</div>
   <div class="float-el" style="bottom:22%;right:7%;animation-delay:.3s;">🦐</div>
 
-  <div class="auth-card">
-    <div class="brand-logo"><div class="brand-icon">🍱</div><div class="brand-name">FSI <span>DDS</span></div></div>
+  <div class="auth-shell">
+    <div class="auth-side">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🍱</div>
+        <div style="font-family:'Baloo 2',cursive;font-weight:900;font-size:1.25rem;">FSI DDS</div>
+      </div>
+      <h1>Đặt cơm nhanh<br>ăn ngon mỗi ngày</h1>
+      <p>Chọn đúng 2 món, theo dõi đơn, thống kê và thanh toán rõ ràng. Giao diện tối ưu cho cả Windows và điện thoại.</p>
+      <div class="food-pills">
+        <div class="food-pill">🍲 Menu hôm nay</div>
+        <div class="food-pill">🧾 Hóa đơn PDF</div>
+        <div class="food-pill">📅 Lịch suất cơm</div>
+        <div class="food-pill">💳 Audit thanh toán</div>
+      </div>
+      <div style="margin-top:22px;opacity:.9;font-weight:800;">Tip: Render free có thể “ngủ” — lần đầu mở sẽ chậm ~30s.</div>
+    </div>
+
+    <div class="auth-card">
+    <div class="brand-logo">
+      <div class="brand-icon brand-icon-wide"><img class="logo-img" src="assets/logo.png" alt="FSI DDS"></div>
+    </div>
     <div class="brand-sub">HỆ THỐNG ĐẶT CƠM NỘI BỘ CÔNG TY FSI DDS</div>
     <div class="auth-error" id="loginError"></div>
     <div class="mb-3">
@@ -207,11 +252,12 @@ textarea.inp-fc{resize:none;}
     </div>
     <div class="mb-3">
       <label class="form-label">Mật khẩu</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="lg-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="lg-pass" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordLogin()"><i class="fas fa-eye" id="lg-pass-icon"></i></button></div>
     </div>
     <div class="remember-row"><label><input type="checkbox" id="rememberMe"> Nhớ mật khẩu</label></div>
     <button class="btn-pf" id="loginBtn" onclick="doLogin()"><i class="fas fa-sign-in-alt me-2"></i>ĐĂNG NHẬP</button>
     <div class="auth-switch">Chưa có tài khoản? <a onclick="showRegister()">Đăng ký ngay</a></div>
+  </div>
   </div>
 </div>
 
@@ -220,8 +266,25 @@ textarea.inp-fc{resize:none;}
   <div class="float-el" style="top:10%;right:8%;">🍱</div>
   <div class="float-el" style="bottom:16%;left:10%;animation-delay:1s;">🥘</div>
 
-  <div class="auth-card">
-    <div class="brand-logo"><div class="brand-icon">🍱</div><div class="brand-name">FSI <span>DDS</span></div></div>
+  <div class="auth-shell">
+    <div class="auth-side">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🥗</div>
+        <div style="font-family:'Baloo 2',cursive;font-weight:900;font-size:1.25rem;">FSI DDS</div>
+      </div>
+      <h1>Tạo tài khoản<br>vào đặt cơm ngay</h1>
+      <p>Mỗi suất gồm 2 món, giá 40.000đ. Admin quản lý menu và xuất báo cáo dễ dàng.</p>
+      <div class="food-pills">
+        <div class="food-pill">✅ Đăng ký nhanh</div>
+        <div class="food-pill">🍽️ Chọn món</div>
+        <div class="food-pill">📊 Theo dõi</div>
+      </div>
+    </div>
+
+    <div class="auth-card">
+    <div class="brand-logo">
+      <div class="brand-icon brand-icon-wide"><img class="logo-img" src="assets/logo.png" alt="FSI DDS"></div>
+    </div>
     <div class="brand-sub">ĐĂNG KÝ TÀI KHOẢN MỚI</div>
     <div class="auth-error" id="regError"></div>
     <div class="mb-3">
@@ -234,22 +297,24 @@ textarea.inp-fc{resize:none;}
     </div>
     <div class="mb-3">
       <label class="form-label">Mật khẩu</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass" placeholder="Ít nhất 6 ký tự..."></div>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass" placeholder="Ít nhất 6 ký tự..." style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordRegister()"><i class="fas fa-eye" id="rg-pass-icon"></i></button></div>
     </div>
     <div class="mb-4">
       <label class="form-label">Xác nhận mật khẩu</label>
-      <div class="inp-wrap"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass2" placeholder="Nhập lại mật khẩu..." onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="rg-pass2" placeholder="Nhập lại mật khẩu..." onkeydown="if(event.key==='Enter')doRegister()" style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="togglePasswordRegisterConfirm()"><i class="fas fa-eye" id="rg-pass2-icon"></i></button></div>
     </div>
     <button class="btn-pf" id="regBtn" onclick="doRegister()"><i class="fas fa-user-plus me-2"></i>TẠO TÀI KHOẢN</button>
     <div class="auth-switch">Đã có tài khoản? <a onclick="showLogin()">Đăng nhập</a></div>
+  </div>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="mainApp" style="display:none;min-height:100vh;">
+  <div class="sb-backdrop" id="sbBackdrop" onclick="closeSidebar()"></div>
   <div class="sidebar">
     <div style="padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07);">
-      <div class="sl-brand"><div class="sl-icon">🍱</div><div class="sl-text">FSI DDS</div></div>
+      <div class="sl-brand"><div class="sl-icon"><img class="logo-img" src="assets/logo.png" alt="FSI DDS"></div><div class="sl-text">FSI DDS</div></div>
       <div class="sl-sub">Hệ thống đặt cơm nội bộ</div>
     </div>
     <div class="sidebar-user">
@@ -266,14 +331,25 @@ textarea.inp-fc{resize:none;}
       <button class="slink admin-only" onclick="showPage('allOrders')"><span class="slink-ic">📦</span>Tất cả đơn <span class="bdg-pill" id="orderBadge">0</span></button>
       <button class="slink admin-only" onclick="showPage('statistics')"><span class="slink-ic">📈</span>Thống kê</button>
       <button class="slink admin-only" onclick="showPage('payment')"><span class="slink-ic">💰</span>Thanh toán</button>
+      <button class="slink admin-only" onclick="showPage('invoice')"><span class="slink-ic">🧾</span>Xuất hóa đơn PDF</button>
+      <button class="slink admin-only" onclick="showPage('reviews')"><span class="slink-ic">⭐</span>Đánh giá</button>
       <button class="slink admin-only" onclick="showPage('userMgmt')"><span class="slink-ic">👥</span>Quản lý tài khoản</button>
     </nav>
-    <div class="sidebar-bot"><button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i>Đăng xuất</button></div>
+    <div class="sidebar-bot">
+      <button class="btn-logout" onclick="showChangePasswordModal()" style="margin-bottom:8px;width:100%;background:rgba(255,255,255,.1);"><i class="fas fa-key me-1"></i>Đổi mật khẩu</button>
+      <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i>Đăng xuất</button>
+    </div>
   </div>
 
   <div class="main-content">
     <div class="topbar">
-      <div><div class="topbar-title" id="pageTitle">Dashboard</div><div class="topbar-sub" id="pageDate"></div></div>
+      <div class="tb-left">
+        <button class="btn-ham" type="button" onclick="openSidebar()" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <div style="min-width:0;">
+          <div class="topbar-title" id="pageTitle">Dashboard</div>
+          <div class="topbar-sub" id="pageDate"></div>
+        </div>
+      </div>
       <div class="u-av" id="topAv" style="width:36px;height:36px;font-size:.8rem;">U</div>
     </div>
     <div class="pcontent">
@@ -299,12 +375,12 @@ textarea.inp-fc{resize:none;}
         <div style="background:linear-gradient(135deg,#EBF3FF,#F5F9FF);border:2px solid var(--border);border-radius:16px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
           <span style="font-size:1.8rem;">ℹ️</span>
           <div><div style="font-weight:800;color:var(--dark);font-size:.95rem;">Quy tắc đặt cơm</div>
-          <div style="color:var(--text-muted);font-size:.83rem;margin-top:2px;">Mỗi suất = <b style="color:var(--primary);">đúng 2 món</b> · Giá cố định <b style="color:var(--primary);">40.000đ / suất</b></div></div>
+          <div style="color:var(--text-muted);font-size:.83rem;margin-top:2px;">Mỗi suất = <b style="color:var(--primary);">1 hoặc 2 món</b> · Giá cố định <b style="color:var(--primary);">40.000đ / suất</b> · Có thể thêm ghi chú và đánh giá</div></div>
         </div>
         <div class="row g-4">
           <div class="col-md-7">
             <div class="card-m">
-              <div class="card-hd"><div class="card-hd-t">📋 Chọn 2 món trong menu</div><span class="chip" id="menuChip"></span></div>
+              <div class="card-hd"><div class="card-hd-t">📋 Chọn 1-2 món trong menu</div><span class="chip" id="menuChip"></span></div>
               <div class="p-4" id="dishList"><div style="text-align:center;color:var(--text-muted);padding:30px;"><div style="font-size:3rem;">⏳</div><div style="margin-top:10px;">Đang tải menu...</div></div></div>
               <div id="selCounter" style="display:none;padding:12px 22px;background:#F5F8FF;border-top:1px solid var(--border);">
                 <span style="font-size:.84rem;color:var(--text-muted);font-weight:600;">Đã chọn: <b id="selCountNum" style="color:var(--primary);">0</b>/2 món</span>
@@ -316,9 +392,31 @@ textarea.inp-fc{resize:none;}
               <div class="card-hd"><div class="card-hd-t">🛒 Thông tin đặt</div></div>
               <div class="p-4">
                 <div class="mb-3"><div class="slbl">Đặt cho ai?</div><select class="sel" id="orderFor"></select></div>
-                <div class="mb-4 p-3" style="background:#F5F8FF;border-radius:12px;border:1px solid var(--border);min-height:80px;">
-                  <div class="slbl">2 Món đã chọn</div>
-                  <div id="selDishSummary"><div style="color:var(--text-muted);font-size:.84rem;margin-top:4px;">Chưa chọn đủ 2 món</div></div>
+                <div class="mb-4 p-3" style="background:#F5F8FF;border-radius:12px;border:1px solid var(--border);min-height:60px;">
+                  <div class="slbl">Món đã chọn (1-2)</div>
+                  <div id="selDishSummary"><div style="color:var(--text-muted);font-size:.84rem;margin-top:4px;">Chưa chọn món nào</div></div>
+                </div>
+                <div class="mb-4">
+                  <div class="slbl">Ghi chú (tùy chọn)</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                    <button type="button" class="note-btn" onclick="toggleNote('Thêm cơm')" style="border:2px solid #EEF2F8;background:white;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;">Thêm cơm</button>
+                    <button type="button" class="note-btn" onclick="toggleNote('Thêm canh')" style="border:2px solid #EEF2F8;background:white;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;">Thêm canh</button>
+                    <button type="button" class="note-btn" onclick="toggleNote('Thêm mắm')" style="border:2px solid #EEF2F8;background:white;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;">Thêm mắm</button>
+                    <button type="button" class="note-btn" onclick="toggleNote('Thêm tương ớt')" style="border:2px solid #EEF2F8;background:white;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;">Thêm tương ớt</button>
+                    <button type="button" class="note-btn" onclick="toggleNote('Thêm thìa')" style="border:2px solid #EEF2F8;background:white;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;">Thêm thìa</button>
+                  </div>
+                  <textarea class="inp-fc" id="orderNotes" placeholder="Ghi chú khác..." rows="2" style="margin-top:8px;"></textarea>
+                </div>
+                <div class="mb-4">
+                  <div class="slbl">Đánh giá bữa cơm hôm nay (sao)</div>
+                  <div style="display:flex;gap:8px;margin-top:6px;font-size:1.5rem;">
+                    <button type="button" onclick="setRating(1)" data-rating="1" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
+                    <button type="button" onclick="setRating(2)" data-rating="2" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
+                    <button type="button" onclick="setRating(3)" data-rating="3" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
+                    <button type="button" onclick="setRating(4)" data-rating="4" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
+                    <button type="button" onclick="setRating(5)" data-rating="5" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
+                  </div>
+                  <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;">Đã chọn: <span id="ratingDisplay">0</span> sao</div>
                 </div>
                 <div class="mb-4 p-3" style="background:linear-gradient(135deg,#EBF3FF,#F5F9FF);border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
                   <span style="font-weight:700;color:var(--text-muted);font-size:.85rem;">💰 Giá 1 suất</span>
@@ -337,7 +435,14 @@ textarea.inp-fc{resize:none;}
         <div class="row g-3 mb-4">
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-blue"><i class="fas fa-utensils"></i></div><div><div class="stat-val" id="myS1">—</div><div class="stat-lbl">Suất tháng này</div></div></div></div>
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-coins"></i></div><div><div class="stat-val" id="myS2">—</div><div class="stat-lbl">Chi phí tháng này</div></div></div></div>
-          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="myS3">—</div><div class="stat-lbl">Thanh toán tháng này</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="myS3">—</div><div class="stat-lbl">Đã thanh toán</div></div></div></div>
+          <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-red"><i class="fas fa-exclamation-circle"></i></div><div><div class="stat-val" id="myS4">—</div><div class="stat-lbl">Chưa thanh toán</div></div></div></div>
+        </div>
+        <div class="card-m mb-4">
+          <div class="card-hd"><div class="card-hd-t">📅 Lịch suất cơm theo tháng</div></div>
+          <div class="p-3" id="myCalendar" style="overflow-x:auto;">
+            <div style="text-align:center;color:var(--text-muted);padding:18px;">Đang tải...</div>
+          </div>
         </div>
         <div class="card-m"><div class="card-hd"><div class="card-hd-t">Lịch sử đặt cơm</div></div><div class="p-4" id="myOrderList"><div style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải...</div></div></div>
       </div>
@@ -366,6 +471,7 @@ textarea.inp-fc{resize:none;}
         <div class="sec-title">📦 Tất cả đơn hôm nay</div><div class="sec-sub">Danh sách đặt cơm toàn công ty</div>
         <div class="d-flex gap-2 mb-3">
           <button class="btn-order" style="padding:9px 18px;font-size:.83rem;" onclick="exportCSV()"><i class="fas fa-file-excel me-1"></i>Xuất CSV</button>
+          <button class="btn-order" style="padding:9px 18px;font-size:.83rem;background:#e74c3c;border:none;" onclick="exportOrdersPDF()"><i class="fas fa-file-pdf me-1"></i>Xuất menu hôm nay (PDF)</button>
           <button onclick="window.print()" style="padding:9px 18px;font-size:.83rem;background:white;border:2px solid var(--primary);border-radius:10px;color:var(--primary);font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;"><i class="fas fa-print me-1"></i>In</button>
         </div>
         <div class="card-m">
@@ -392,6 +498,45 @@ textarea.inp-fc{resize:none;}
           <div class="col-md-4"><div class="stat-card"><div class="stat-ic ic-yellow"><i class="fas fa-clock"></i></div><div><div class="stat-val" id="payUnpaid">—</div><div class="stat-lbl">Chưa thanh toán</div></div></div></div>
         </div>
         <div id="payList"></div>
+        <div id="payHistory"></div>
+      </div>
+
+      <!-- XUẤT HÓA ĐƠN -->
+      <div id="page-invoice" class="page">
+        <div class="sec-title">🧾 Xuất hóa đơn PDF</div>
+        <div class="sec-sub">Tạo file PDF theo tháng, gồm menu từng người và số tiền</div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">Chọn tháng</div></div>
+              <div class="p-4">
+                <div class="mb-3">
+                  <div class="slbl">Tháng</div>
+                  <input class="inp-fc" type="month" id="invMonth">
+                </div>
+                <button class="btn-order w-100" id="invBtn" onclick="exportInvoicePDF()"><i class="fas fa-file-pdf me-2"></i>Xuất PDF</button>
+                <div style="font-size:.8rem;color:var(--text-muted);margin-top:10px;">
+                  Nếu PDF bị lỗi font, bạn có thể dùng nút <b>In</b> của trình duyệt để lưu PDF.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">Xem trước</div><span class="chip" id="invPreviewChip">—</span></div>
+              <div class="p-4" id="invPreview" style="color:var(--text-muted);">Chọn tháng và bấm “Xuất PDF”.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ĐÁNH GIÁ -->
+      <div id="page-reviews" class="page">
+        <div class="sec-title">⭐ Đánh giá bữa cơm hôm nay</div><div class="sec-sub">Tổng hợp đánh giá từ nhân viên</div>
+        <div class="card-m">
+          <div class="card-hd"><div class="card-hd-t">Danh sách đánh giá</div><span class="chip" id="reviewCount">0 đánh giá</span></div>
+          <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Người ăn</th><th>Sao</th><th>Ghi chú</th><th>Thời gian</th></tr></thead><tbody id="reviewBody"><tr><td colspan="4" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div>
+        </div>
       </div>
 
       <!-- QUẢN LÝ USER -->
@@ -409,11 +554,31 @@ textarea.inp-fc{resize:none;}
 
 <div class="toast-box" id="toastBox"></div>
 
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div id="changePasswordModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:20px;padding:32px;width:100%;max-width:400px;box-shadow:0 30px 80px rgba(0,0,0,.22);">
+    <div style="font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;color:var(--dark);margin-bottom:20px;">🔐 Đổi mật khẩu</div>
+    <div class="auth-error" id="changePwdError" style="display:none;"></div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu mới</label>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="newPwd" placeholder="Ít nhất 6 ký tự..." style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="toggleNewPwd()"><i class="fas fa-eye" id="newPwd-icon"></i></button></div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label">Xác nhận mật khẩu mới</label>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="newPwd2" placeholder="Nhập lại mật khẩu..." style="padding-right:44px;" onkeydown="if(event.key==='Enter')submitChangePwd()"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="toggleNewPwd2()"><i class="fas fa-eye" id="newPwd2-icon"></i></button></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button class="btn-pf" style="flex:1;" id="changePwdBtn" onclick="submitChangePwd()">Đổi mật khẩu</button>
+      <button style="flex:1;background:white;border:2px solid var(--primary);border-radius:var(--radius-sm);color:var(--primary);font-weight:800;cursor:pointer;" onclick="closeChangePasswordModal()">Hủy</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // CONFIG — ĐỔI URL NÀY THÀNH URL RENDER CỦA BẠN
 // ═══════════════════════════════════════════════════════════
-const API = 'https://fsidds-backend.onrender.com'; // <-- ĐỔI SAU KHI DEPLOY
+const API = 'https://fsidds.onrender.com'; // <-- ĐỔI SAU KHI DEPLOY
 
 // ═══════════════════════════════════════════════════════════
 // STATE
@@ -424,6 +589,7 @@ let menuData = null; // { id, date, dishes: [{id, name}] }
 let selDishes = []; // selected dish IDs (max 2)
 let allUsers = [];
 let cachedOrders = [];
+let myOrdersTimeout;
 
 const EMOJIS = ['🍗','🐟','🦐','🥩','🍳','🥦','🥕','🍤','🥬','🌽','🦀','🥚','🫕','🍖','🧅'];
 
@@ -437,6 +603,66 @@ const clearAuth = () => { localStorage.removeItem('fsi_token'); localStorage.rem
 function ini(n){ return n.split(' ').map(w=>w[0]).join('').slice(-2).toUpperCase(); }
 function todayLong(){ return new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}); }
 function monthISO(){ return new Date().toISOString().slice(0,7); }
+function prevMonthISO(ref=new Date()){
+  const d=new Date(ref);
+  d.setDate(1);
+  d.setMonth(d.getMonth()-1);
+  return d.toISOString().slice(0,7);
+}
+function fmtDay(d){
+  return d.toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit'});
+}
+function startOfWeekMonday(ref=new Date()){
+  const d=new Date(ref);
+  const day=(d.getDay()+6)%7; // Mon=0..Sun=6
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()-day);
+  return d;
+}
+function endOfWeekSunday(ref=new Date()){
+  const s=startOfWeekMonday(ref);
+  const e=new Date(s);
+  e.setDate(e.getDate()+6);
+  e.setHours(23,59,59,999);
+  return e;
+}
+function ymd(d){ return new Date(d).toISOString().split('T')[0]; }
+
+function buildMyCalendarHtml(mon, ords){
+  const map={};
+  ords.forEach(o=>{
+    map[o.date]=(map[o.date]||0)+1;
+  });
+  const [y,m] = mon.split('-').map(x=>parseInt(x,10));
+  const first=new Date(y, m-1, 1);
+  const daysInMonth=new Date(y, m, 0).getDate();
+  // Monday-based index 0-6
+  const firstDow=(first.getDay()+6)%7;
+  let html='<table class=\"tbl\"><thead><tr>'+
+    '<th>Th 2</th><th>Th 3</th><th>Th 4</th><th>Th 5</th><th>Th 6</th><th>Th 7</th><th>CN</th>'+
+    '</tr></thead><tbody>';
+  let day=1;
+  for(let week=0; week<6 && day<=daysInMonth; week++){
+    html+='<tr>';
+    for(let dow=0; dow<7; dow++){
+      if(week===0 && dow<firstDow || day>daysInMonth){
+        html+='<td style=\"background:#F9FBFF;\"></td>';
+      }else{
+        const dStr = mon + '-' + String(day).padStart(2,'0');
+        const cnt = map[dStr]||0;
+        const has = cnt>0;
+        html+=`<td style=\"vertical-align:top;padding:8px 6px;${has?'background:#EBF3FF;':''}\">`+
+          `<div style=\"font-weight:800;color:${has?'var(--primary)':'var(--dark)'};font-size:.9rem;\">${day}</div>`+
+          `<div style=\"font-size:.75rem;color:${has?'var(--primary)':'var(--text-muted)'};margin-top:4px;\">${has?cnt+' suất':''}</div>`+
+        `</td>`;
+        day++;
+      }
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  return html;
+}
 
 function toast(msg, type='ok'){
   const icons={ok:'✅',err:'❌',warn:'⚠️',info:'ℹ️'};
@@ -451,6 +677,48 @@ function toast(msg, type='ok'){
 
 function loading(show){
   document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+}
+
+function togglePasswordLogin(){
+  const inp = document.getElementById('lg-pass');
+  const icon = document.getElementById('lg-pass-icon');
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+function togglePasswordRegister(){
+  const inp = document.getElementById('rg-pass');
+  const icon = document.getElementById('rg-pass-icon');
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+function togglePasswordRegisterConfirm(){
+  const inp = document.getElementById('rg-pass2');
+  const icon = document.getElementById('rg-pass2-icon');
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -533,7 +801,21 @@ async function doRegister(){
 
 function doLogout(){
   clearAuth(); CU=null; TOKEN=null;
+  closeSidebar();
   showLogin();
+}
+
+function openSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const bd=document.getElementById('sbBackdrop');
+  if(sb) sb.classList.add('open');
+  if(bd) bd.classList.add('show');
+}
+function closeSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const bd=document.getElementById('sbBackdrop');
+  if(sb) sb.classList.remove('open');
+  if(bd) bd.classList.remove('show');
 }
 
 async function initApp(){
@@ -561,20 +843,23 @@ async function initApp(){
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',userMgmt:'Quản lý tài khoản'};
+const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',invoice:'Xuất hóa đơn PDF',reviews:'Đánh giá',userMgmt:'Quản lý tài khoản'};
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.slink').forEach(l=>l.classList.remove('active'));
   const pg=document.getElementById('page-'+id); if(pg) pg.classList.add('active');
   document.querySelectorAll('.slink').forEach(l=>{ if(l.getAttribute('onclick')&&l.getAttribute('onclick').includes(`'${id}'`)) l.classList.add('active'); });
   document.getElementById('pageTitle').textContent=TITLES[id]||id;
+  closeSidebar();
   if(id==='dashboard')  refreshDashboard();
   if(id==='orderPage')  refreshOrderPage();
   if(id==='myOrders')   refreshMyOrders();
   if(id==='allOrders')  refreshAllOrders();
   if(id==='statistics') refreshStatistics();
   if(id==='payment')    refreshPayment();
+  if(id==='invoice')    refreshInvoice();
   if(id==='menuMgmt')   refreshMenuPreview();
+  if(id==='reviews')    refreshReviews();
   if(id==='userMgmt')   refreshUserMgmt();
 }
 
@@ -640,11 +925,9 @@ function renderDishes(){
     document.getElementById('selCounter').style.display='none';
     return;
   }
-  const maxed=selDishes.length>=2;
   el.innerHTML=menuData.dishes.map((d,i)=>{
     const isSel=selDishes.includes(d.id);
-    const isDis=maxed&&!isSel;
-    return `<div class="dish-card ${isSel?'selected':''} ${isDis?'maxed':''}" onclick="toggleDish(${d.id})">
+    return `<div class="dish-card ${isSel?'selected':''}" onclick="toggleDish(${d.id})">
       <div class="dish-cb">${isSel?'✓':''}</div>
       <div class="dish-num">${i+1}</div>
       <span style="font-size:1.45rem;">${EMOJIS[i%EMOJIS.length]}</span>
@@ -669,26 +952,73 @@ function toggleDish(dishId){
 
 function updateSelSummary(){
   const sumEl=document.getElementById('selDishSummary');
-  if(!selDishes.length){ sumEl.innerHTML='<div style="color:var(--text-muted);font-size:.84rem;margin-top:4px;">Chưa chọn đủ 2 món</div>'; return; }
+  if(!selDishes.length){ sumEl.innerHTML='<div style="color:var(--text-muted);font-size:.84rem;margin-top:4px;">Chưa chọn món nào</div>'; return; }
   const names=selDishes.map(id=>{ const d=menuData.dishes.find(x=>x.id===id); return d?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:1.2rem;">${EMOJIS[menuData.dishes.indexOf(d)%EMOJIS.length]}</span><span style="font-weight:700;font-size:.9rem;">${d.name}</span></div>`:''; });
   sumEl.innerHTML=names.join('');
-  if(selDishes.length<2) sumEl.innerHTML+=`<div style="color:var(--accent);font-size:.8rem;font-weight:700;margin-top:8px;">⚠️ Cần chọn thêm 1 món nữa</div>`;
+}
+
+function toggleNote(note){
+  const btn = event.target;
+  const textarea = document.getElementById('orderNotes');
+  if(btn.style.borderColor === 'var(--primary)' || btn.style.background !== 'white'){
+    // Remove note
+    btn.style.borderColor = '#EEF2F8';
+    btn.style.background = 'white';
+    btn.style.color = 'var(--text-muted)';
+    const text = textarea.value;
+    textarea.value = text.replace(note + ' ', '').replace(note, '');
+  } else {
+    // Add note
+    btn.style.borderColor = 'var(--primary)';
+    btn.style.background = 'var(--primary)';
+    btn.style.color = 'white';
+    if(textarea.value) textarea.value += ' ' + note;
+    else textarea.value = note;
+  }
+}
+
+let currentRating = 0;
+function setRating(stars){
+  currentRating = stars;
+  document.getElementById('ratingDisplay').textContent = stars;
+  document.querySelectorAll('[data-rating]').forEach(btn => {
+    const btnStars = parseInt(btn.getAttribute('data-rating'));
+    btn.style.opacity = btnStars <= stars ? '1' : '0.5';
+  });
 }
 
 async function submitOrder(){
-  if(selDishes.length!==2){ toast('Vui lòng chọn đúng 2 món!','warn'); return; }
+  if(selDishes.length === 0){ toast('Vui lòng chọn ít nhất 1 món!','warn'); return; }
+  if(selDishes.length > 2){ toast('Chỉ được chọn tối đa 2 món!','warn'); return; }
   const forId=parseInt(document.getElementById('orderFor').value);
   if(!forId){ toast('Vui lòng chọn người ăn!','warn'); return; }
+  const notes = document.getElementById('orderNotes').value.trim();
+  const rating = currentRating > 0 ? currentRating : null;
   const btn=document.getElementById('orderBtn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang đặt...';
   try{
-    await api('POST','/api/orders',{ dish1Id:selDishes[0], dish2Id:selDishes[1], orderedFor:forId });
+    await api('POST','/api/orders',{ 
+      dish1Id:selDishes[0], 
+      dish2Id:selDishes[1] || null, 
+      orderedFor:forId,
+      notes: notes || null,
+      rating: rating
+    });
     const d1=menuData.dishes.find(x=>x.id===selDishes[0]);
-    const d2=menuData.dishes.find(x=>x.id===selDishes[1]);
+    const d2=selDishes[1] ? menuData.dishes.find(x=>x.id===selDishes[1]) : null;
     const fu=allUsers.find(u=>u.id===forId);
-    toast(`✅ Đặt thành công (${d1?.name} + ${d2?.name}) cho ${fu?.fullname||''}!`);
+    const dishText = d2 ? `${d1?.name} + ${d2.name}` : d1?.name;
+    toast(`✅ Đặt thành công (${dishText}) cho ${fu?.fullname||''}!`);
     selDishes=[];
+    currentRating=0;
+    document.getElementById('orderNotes').value='';
+    document.getElementById('ratingDisplay').textContent='0';
+    document.querySelectorAll('[data-rating]').forEach(btn => btn.style.opacity='0.5');
+    document.querySelectorAll('.note-btn').forEach(btn => { btn.style.borderColor='#EEF2F8'; btn.style.background='white'; btn.style.color='var(--text-muted)'; });
     renderDishes();
+    // Refresh stats after new order (always, not just when on page)
+    refreshDashboard();
+    refreshMyOrders();
   } catch(e){ toast('Lỗi đặt cơm: '+e.message,'err'); }
   finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-check me-2"></i>ĐẶT CƠM NGAY'; }
 }
@@ -699,23 +1029,43 @@ async function submitOrder(){
 async function refreshMyOrders(){
   try{
     const mon=monthISO();
-    const ords=await api('GET',`/api/orders/my?month=${mon}`);
-    const pays=await api('GET',`/api/payments?month=${mon}`).catch(()=>[]);
-    document.getElementById('myS1').textContent=ords.length;
-    document.getElementById('myS2').textContent=(ords.length*40000/1000)+'k';
-    const myPay=Array.isArray(pays)?pays.find(p=>p.userId===CU.id):null;
-    document.getElementById('myS3').textContent=myPay?.paid?'✅ Đã trả':'Chưa trả';
+    const [ordsCur, payInfo] = await Promise.all([
+      api('GET',`/api/orders/my?month=${mon}`),
+      api('GET',`/api/payments/my?month=${mon}`).catch(()=>null)
+    ]);
+
+    // Header cards
+    document.getElementById('myS1').textContent=ordsCur.length;
+    document.getElementById('myS2').textContent=(ordsCur.length*40000/1000)+'k';
+    const paidAmount = payInfo?.paidTotal ?? 0;
+    const remaining = payInfo?.remainingTotal !== undefined ? payInfo.remainingTotal : (ordsCur.length * 40000);
+    document.getElementById('myS3').textContent=(paidAmount/1000)+'k';
+    document.getElementById('myS4').textContent=(remaining/1000)+'k';
+
+    // Calendar view
+    document.getElementById('myCalendar').innerHTML = buildMyCalendarHtml(mon, ordsCur);
+
+    // History list (current month)
     const el=document.getElementById('myOrderList');
-    el.innerHTML=ords.length?ords.map(o=>`
+    el.innerHTML=ordsCur.length?ordsCur.map(o=>`
       <div class="order-hcard">
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-size:1.7rem;">🍽️</span>
-          <div><div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
-          <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div></div>
+          <div style="flex:1"><div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div>
+          ${o.rating?'<div style="font-size:.75rem;margin-top:4px;color:#FFA500;">Đánh giá: '+('⭐'.repeat(o.rating))+'</div>':''}
+          ${o.notes?'<div style="font-size:.75rem;margin-top:4px;color:var(--text-muted);font-style:italic;">💬 Ghi chú: '+o.notes+'</div>':''}
+          </div>
         </div>
         <div style="text-align:right;"><div style="font-family:'Baloo 2',cursive;font-weight:800;color:var(--primary);">40k</div></div>
       </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có đơn nào tháng này</div>';
   } catch(e){ toast('Lỗi tải đơn: '+e.message,'err'); }
+
+  // Auto refresh every 30s if still on page
+  clearTimeout(myOrdersTimeout);
+  if(document.getElementById('page-myOrders').classList.contains('active')) {
+    myOrdersTimeout = setTimeout(refreshMyOrders, 30000);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -732,8 +1082,8 @@ async function refreshAllOrders(){
       <tr>
         <td style="font-weight:800;color:var(--primary);">${i+1}</td>
         <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:800;color:white;">${ini(o.orderer?.fullname||'?')}</div>${o.orderer?.fullname||'?'}</div></td>
-        <td>${o.receiver?.fullname||'?'}</td>
-        <td><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></td>
+        <td><div>${o.receiver?.fullname||'?'}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:3px;">${o.rating?'⭐'.repeat(o.rating):'không đánh giá'}</div></td>
+        <td><div><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></div>${o.notes?'<div style="font-size:.75rem;margin-top:4px;font-style:italic;color:var(--text-muted);">💬 '+o.notes+'</div>':''}</td>
         <td><b style="color:var(--primary);">40.000đ</b></td>
         <td style="color:var(--text-muted);">${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
         <td><button onclick="delOrder(${o.id})" style="border:none;background:#FEEFEF;color:var(--danger);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.77rem;font-weight:700;">🗑️ Xóa</button></td>
@@ -755,6 +1105,46 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`doncom_fsi_${new Date().toISOString().split('T')[0]}.csv`; a.click();
   toast('Đã xuất CSV 📊');
+}
+
+function exportOrdersPDF(){
+  if(!cachedOrders.length){ toast('Không có đơn nào để xuất!','warn'); return; }
+  if(!window.pdfMake){ toast('Thư viện PDF chưa sẵn sàng','err'); return; }
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const body = [
+    ['#','Người ăn','Món 1','Món 2','Giờ']
+  ];
+  cachedOrders.forEach((o,i)=>{
+    body.push([
+      i+1,
+      o.receiver?.fullname||'?',
+      o.dish1?.name||'?',
+      o.dish2?.name||'?',
+      new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})
+    ]);
+  });
+
+  const dd = {
+    pageSize:'A4',
+    pageMargins:[24,32,24,32],
+    content:[
+      { text:'Danh sách đặt cơm hôm nay', fontSize:16, bold:true, color:'#0D1B2A' },
+      { text: dateStr, margin:[0,4,0,10], color:'#7A8EA0' },
+      {
+        table:{
+          headerRows:1,
+          widths:['auto','*','*','*','auto'],
+          body
+        },
+        layout:'lightHorizontalLines',
+        fontSize:9
+      }
+    ]
+  };
+  window.pdfMake.createPdf(dd).download(`menu-dat-com-${today.toISOString().split('T')[0]}.pdf`);
+  toast('Đã xuất PDF menu hôm nay ✅');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -808,31 +1198,156 @@ async function refreshPayment(){
   try{
     const mon=monthISO();
     const data=await api('GET',`/api/payments?month=${mon}`);
-    const total=data.reduce((s,x)=>s+x.total,0);
+    const total=data.reduce((s,x)=>s+(x.remainingTotal||0),0);
     document.getElementById('payTotal').textContent=(total/1000)+'k';
-    document.getElementById('payPaid').textContent=data.filter(x=>x.paid).length;
-    document.getElementById('payUnpaid').textContent=data.filter(x=>!x.paid).length;
+    document.getElementById('payPaid').textContent=data.filter(x=>(x.remainingTotal||0)===0 && (x.paidTotal||0)>0).length;
+    document.getElementById('payUnpaid').textContent=data.filter(x=>(x.remainingTotal||0)>0).length;
     document.getElementById('payList').innerHTML=data.length?data.map(x=>`
-      <div class="pay-card ${x.paid?'paid':''}">
+      <div class="pay-card ${(x.remainingTotal||0)===0 && (x.paidTotal||0)>0?'paid':''}">
         <div style="display:flex;align-items:center;gap:14px;">
           <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white;">${ini(x.fullname)}</div>
-          <div><div class="pay-name">${x.fullname}</div><div class="pay-detail">${x.count} suất × 40.000đ · ${mon}</div></div>
+          <div>
+            <div class="pay-name">${x.fullname}</div>
+            <div class="pay-detail">
+              Còn lại: <b>${x.remainingCount||0}</b> suất · ${(x.remainingTotal||0)/1000}k · ${mon}
+              ${(x.paidAt?`<span style="margin-left:10px;color:var(--text-muted);">| Đã trả: ${(x.paidTotal||0)/1000}k lúc ${new Date(x.paidAt).toLocaleString('vi-VN')}</span>`:'')}
+            </div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
-          <div class="pay-amount">${(x.total/1000)}k</div>
-          ${x.paid?`<span class="bdg-paid">✔ Đã thanh toán</span>`:`<button class="btn-pay" onclick="markPaid(${x.userId})"><i class="fas fa-check me-1"></i>Đã thanh toán</button>`}
+          <div class="pay-amount">${((x.remainingTotal||0)/1000)}k</div>
+          ${(x.remainingTotal||0)===0 && (x.paidTotal||0)>0?`<span class="bdg-paid">✔ Đã thanh toán</span>`:`<button class="btn-pay" onclick="markPaid(${x.userId})"><i class="fas fa-check me-1"></i>Đã thanh toán</button>`}
         </div>
       </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:40px;">Chưa có dữ liệu tháng này</div>';
+
+    // History table (audit)
+    const logs = await api('GET',`/api/payments/history?month=${mon}`).catch(()=>[]);
+    const box = document.getElementById('payHistory');
+    if(box){
+      box.innerHTML = (logs && logs.length) ? `
+        <div class="card-m" style="margin-top:14px;">
+          <div class="card-hd"><div class="card-hd-t">🧾 Lịch sử thanh toán (audit)</div></div>
+          <div style="overflow-x:auto;">
+            <table class="tbl">
+              <thead><tr><th>Thời gian</th><th>Nhân viên</th><th>Suất (lúc trả)</th><th>Số tiền (lúc trả)</th><th>Xác nhận bởi</th></tr></thead>
+              <tbody>
+                ${logs.map(l=>`
+                  <tr>
+                    <td style="color:var(--text-muted);">${new Date(l.paid_at).toLocaleString('vi-VN')}</td>
+                    <td style="font-weight:700;">${l.user?.fullname||'—'}</td>
+                    <td style="font-weight:800;color:var(--primary);">${l.paid_count}</td>
+                    <td style="font-weight:800;color:var(--secondary);">${(l.paid_total/1000)}k</td>
+                    <td style="color:var(--text-muted);">${l.confirmer?.fullname||'—'}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>` : '<div style="margin-top:14px;color:var(--text-muted);font-size:.85rem;">Chưa có lịch sử thanh toán tháng này.</div>';
+    }
   } catch(e){ toast('Lỗi thanh toán: '+e.message,'err'); }
 }
 
 async function markPaid(userId){
   try{
-    await api('POST','/api/payments/mark-paid',{userId,month:monthISO()});
+    const rs = await api('POST','/api/payments/mark-paid',{userId,month:monthISO()});
     const u=allUsers.find(x=>x.id===userId);
-    toast(`Đã xác nhận thanh toán cho ${u?.fullname||'nhân viên'} ✅`);
+    const paidTotal = rs?.payment?.paid_total ?? rs?.log?.paid_total;
+    const paidCount = rs?.payment?.paid_count ?? rs?.log?.paid_count;
+    toast(`Đã xác nhận thanh toán cho ${u?.fullname||'nhân viên'}: ${paidCount||0} suất · ${((paidTotal||0)/1000)}k ✅`);
     refreshPayment();
   } catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INVOICE (PDF)
+// ═══════════════════════════════════════════════════════════
+function refreshInvoice(){
+  const inp=document.getElementById('invMonth');
+  if(inp && !inp.value) inp.value = monthISO();
+  document.getElementById('invPreviewChip').textContent = inp?.value || '—';
+  document.getElementById('invPreview').innerHTML = 'Chọn tháng và bấm “Xuất PDF”.';
+}
+
+async function exportInvoicePDF(){
+  const month = document.getElementById('invMonth')?.value || monthISO();
+  const btn = document.getElementById('invBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang tạo...';
+  try{
+    const data = await api('GET', `/api/invoices/month?month=${month}`);
+    document.getElementById('invPreviewChip').textContent = data.month;
+
+    // Preview (HTML)
+    const totalAll = data.users.reduce((s,u)=>s+u.total,0);
+    document.getElementById('invPreview').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div><div style="font-weight:900;color:var(--dark);font-size:1.05rem;">Hóa đơn cơm tháng ${data.month}</div>
+        <div style="color:var(--text-muted);font-size:.82rem;">${data.users.length} người · Tổng: <b style="color:var(--primary);">${(totalAll/1000)}k</b></div></div>
+        <div style="color:var(--text-muted);font-size:.78rem;">Tạo lúc ${new Date(data.generatedAt).toLocaleString('vi-VN')}</div>
+      </div>
+      <div style="margin-top:12px;">${data.users.slice(0,6).map(u=>`
+        <div style="padding:10px 0;border-bottom:1px solid #F3F6FC;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div><div style="font-weight:800;">${u.fullname}</div>
+          <div style="font-size:.78rem;color:var(--text-muted);">${u.count} suất</div></div>
+          <div style="font-weight:900;color:var(--primary);">${(u.total/1000)}k</div>
+        </div>`).join('')}
+        ${data.users.length>6?`<div style="margin-top:10px;color:var(--text-muted);font-size:.8rem;">… và ${data.users.length-6} người khác</div>`:''}
+      </div>
+    `;
+
+    // PDF (pdfmake)
+    if(!window.pdfMake){ throw new Error('Thư viện PDF chưa tải xong'); }
+    const dd = {
+      pageSize: 'A4',
+      pageMargins: [32, 38, 32, 38],
+      content: [
+        { text: 'HÓA ĐƠN CƠM NỘI BỘ', fontSize: 16, bold: true, color: '#0D1B2A' },
+        { text: `Tháng: ${data.month}`, margin: [0, 4, 0, 10], color: '#7A8EA0' },
+        {
+          columns: [
+            { text: `Tổng người: ${data.users.length}`, color: '#0D1B2A' },
+            { text: `Tổng tiền: ${(totalAll/1000)}k`, alignment: 'right', bold: true, color: '#0056D2' }
+          ],
+          margin: [0, 0, 0, 12]
+        },
+        ...data.users.flatMap(u => ([
+          { text: u.fullname, fontSize: 12, bold: true, margin: [0, 8, 0, 2] },
+          { text: `${u.count} suất × 40.000đ = ${(u.total/1000)}k`, color: '#0056D2', margin: [0, 0, 0, 4] },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['auto', '*', '*', 'auto'],
+              body: [
+                ['Ngày', 'Món 1', 'Món 2', 'Giá'],
+                ...u.orders.map(o => [
+                  o.date,
+                  o.dish1?.name || '?',
+                  o.dish2?.name || '?',
+                  '40.000đ'
+                ])
+              ]
+            },
+            layout: 'lightHorizontalLines',
+            fontSize: 9
+          }
+        ]))
+      ],
+      styles: {
+        tableHeader: { bold: true }
+      },
+      defaultStyle: {
+        fontSize: 10
+      }
+    };
+
+    window.pdfMake.createPdf(dd).download(`hoa-don-com-${data.month}.pdf`);
+    toast('Đã xuất PDF ✅');
+  } catch(e){
+    toast('Lỗi xuất PDF: ' + e.message, 'err');
+  } finally{
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Xuất PDF';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -862,6 +1377,86 @@ async function delUser(id){
   if(!confirm('Xóa tài khoản này?')) return;
   try{ await api('DELETE',`/api/users/${id}`); toast('Đã xóa tài khoản','info'); refreshUserMgmt(); }
   catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHANGE PASSWORD
+// ═══════════════════════════════════════════════════════════
+function showChangePasswordModal(){
+  document.getElementById('changePasswordModal').style.display='flex';
+}
+function closeChangePasswordModal(){
+  document.getElementById('changePasswordModal').style.display='none';
+  document.getElementById('changePwdError').style.display='none';
+  document.getElementById('newPwd').value='';
+  document.getElementById('newPwd2').value='';
+}
+function toggleNewPwd(){
+  const inp=document.getElementById('newPwd');
+  const icon=document.getElementById('newPwd-icon');
+  if(inp.type==='password'){
+    inp.type='text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type='password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+function toggleNewPwd2(){
+  const inp=document.getElementById('newPwd2');
+  const icon=document.getElementById('newPwd2-icon');
+  if(inp.type==='password'){
+    inp.type='text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type='password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+async function submitChangePwd(){
+  const pwd1=document.getElementById('newPwd').value;
+  const pwd2=document.getElementById('newPwd2').value;
+  const errEl=document.getElementById('changePwdError');
+  const btn=document.getElementById('changePwdBtn');
+  errEl.style.display='none';
+  if(!pwd1||!pwd2){ errEl.textContent='Vui lòng điền đầy đủ!'; errEl.style.display='block'; return; }
+  if(pwd1.length<6){ errEl.textContent='Mật khẩu phải có ít nhất 6 ký tự!'; errEl.style.display='block'; return; }
+  if(pwd1!==pwd2){ errEl.textContent='Mật khẩu xác nhận không khớp!'; errEl.style.display='block'; return; }
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Đang đổi...';
+  try{
+    await api('POST','/api/auth/change-password',{newPassword:pwd1});
+    toast('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.','ok');
+    setTimeout(()=>{ clearAuth(); showLogin(); },1500);
+  } catch(e){
+    errEl.textContent=e.message;
+    errEl.style.display='block';
+  } finally{
+    btn.disabled=false;
+    btn.innerHTML='Đổi mật khẩu';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════════════════
+async function refreshReviews(){
+  try{
+    const {data}=await api('GET','/api/reviews/today');
+    const body=document.getElementById('reviewBody');
+    document.getElementById('reviewCount').textContent=`${data.length} đánh giá`;
+    body.innerHTML=data.length?data.map(r=>`
+      <tr>
+        <td style="font-weight:700;">${r.receiver?.fullname||'?'}</td>
+        <td style="font-size:1.2rem;">${'⭐'.repeat(r.rating||0)}</td>
+        <td style="font-size:.85rem;color:var(--text-muted);max-width:300px;">${r.notes||'—'}</td>
+        <td style="color:var(--text-muted);">${new Date(r.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
+      </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--text-muted);">Chưa có đánh giá nào hôm nay</td></tr>';
+  } catch(e){ toast('Lỗi tải đánh giá: '+e.message,'err'); }
 }
 
 // ═══════════════════════════════════════════════════════════
