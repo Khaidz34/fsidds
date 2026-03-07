@@ -332,9 +332,13 @@ textarea.inp-fc{resize:none;}
       <button class="slink admin-only" onclick="showPage('statistics')"><span class="slink-ic">📈</span>Thống kê</button>
       <button class="slink admin-only" onclick="showPage('payment')"><span class="slink-ic">💰</span>Thanh toán</button>
       <button class="slink admin-only" onclick="showPage('invoice')"><span class="slink-ic">🧾</span>Xuất hóa đơn PDF</button>
+      <button class="slink admin-only" onclick="showPage('reviews')"><span class="slink-ic">⭐</span>Đánh giá</button>
       <button class="slink admin-only" onclick="showPage('userMgmt')"><span class="slink-ic">👥</span>Quản lý tài khoản</button>
     </nav>
-    <div class="sidebar-bot"><button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i>Đăng xuất</button></div>
+    <div class="sidebar-bot">
+      <button class="btn-logout" onclick="showChangePasswordModal()" style="margin-bottom:8px;width:100%;background:rgba(255,255,255,.1);"><i class="fas fa-key me-1"></i>Đổi mật khẩu</button>
+      <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i>Đăng xuất</button>
+    </div>
   </div>
 
   <div class="main-content">
@@ -526,6 +530,15 @@ textarea.inp-fc{resize:none;}
         </div>
       </div>
 
+      <!-- ĐÁNH GIÁ -->
+      <div id="page-reviews" class="page">
+        <div class="sec-title">⭐ Đánh giá bữa cơm hôm nay</div><div class="sec-sub">Tổng hợp đánh giá từ nhân viên</div>
+        <div class="card-m">
+          <div class="card-hd"><div class="card-hd-t">Danh sách đánh giá</div><span class="chip" id="reviewCount">0 đánh giá</span></div>
+          <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Người ăn</th><th>Sao</th><th>Ghi chú</th><th>Thời gian</th></tr></thead><tbody id="reviewBody"><tr><td colspan="4" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div>
+        </div>
+      </div>
+
       <!-- QUẢN LÝ USER -->
       <div id="page-userMgmt" class="page">
         <div class="sec-title">👥 Quản lý tài khoản</div><div class="sec-sub">Danh sách người dùng trong hệ thống</div>
@@ -540,6 +553,26 @@ textarea.inp-fc{resize:none;}
 </div>
 
 <div class="toast-box" id="toastBox"></div>
+
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div id="changePasswordModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:20px;padding:32px;width:100%;max-width:400px;box-shadow:0 30px 80px rgba(0,0,0,.22);">
+    <div style="font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;color:var(--dark);margin-bottom:20px;">🔐 Đổi mật khẩu</div>
+    <div class="auth-error" id="changePwdError" style="display:none;"></div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu mới</label>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="newPwd" placeholder="Ít nhất 6 ký tự..." style="padding-right:44px;"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="toggleNewPwd()"><i class="fas fa-eye" id="newPwd-icon"></i></button></div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label">Xác nhận mật khẩu mới</label>
+      <div class="inp-wrap" style="position:relative;"><i class="fas fa-lock inp-icon"></i><input class="inp" type="password" id="newPwd2" placeholder="Nhập lại mật khẩu..." style="padding-right:44px;" onkeydown="if(event.key==='Enter')submitChangePwd()"><button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;" onclick="toggleNewPwd2()"><i class="fas fa-eye" id="newPwd2-icon"></i></button></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button class="btn-pf" style="flex:1;" id="changePwdBtn" onclick="submitChangePwd()">Đổi mật khẩu</button>
+      <button style="flex:1;background:white;border:2px solid var(--primary);border-radius:var(--radius-sm);color:var(--primary);font-weight:800;cursor:pointer;" onclick="closeChangePasswordModal()">Hủy</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -810,7 +843,7 @@ async function initApp(){
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',invoice:'Xuất hóa đơn PDF',userMgmt:'Quản lý tài khoản'};
+const TITLES={dashboard:'Dashboard',orderPage:'Đặt cơm hôm nay',myOrders:'Đơn của tôi',menuMgmt:'Quản lý Menu',allOrders:'Tất cả đơn hôm nay',statistics:'Thống kê',payment:'Thanh toán',invoice:'Xuất hóa đơn PDF',reviews:'Đánh giá',userMgmt:'Quản lý tài khoản'};
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.slink').forEach(l=>l.classList.remove('active'));
@@ -826,6 +859,7 @@ function showPage(id){
   if(id==='payment')    refreshPayment();
   if(id==='invoice')    refreshInvoice();
   if(id==='menuMgmt')   refreshMenuPreview();
+  if(id==='reviews')    refreshReviews();
   if(id==='userMgmt')   refreshUserMgmt();
 }
 
@@ -1017,8 +1051,11 @@ async function refreshMyOrders(){
       <div class="order-hcard">
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-size:1.7rem;">🍽️</span>
-          <div><div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
-          <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div></div>
+          <div style="flex:1"><div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div>
+          ${o.rating?'<div style="font-size:.75rem;margin-top:4px;color:#FFA500;">Đánh giá: '+('⭐'.repeat(o.rating))+'</div>':''}
+          ${o.notes?'<div style="font-size:.75rem;margin-top:4px;color:var(--text-muted);font-style:italic;">💬 Ghi chú: '+o.notes+'</div>':''}
+          </div>
         </div>
         <div style="text-align:right;"><div style="font-family:'Baloo 2',cursive;font-weight:800;color:var(--primary);">40k</div></div>
       </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có đơn nào tháng này</div>';
@@ -1045,8 +1082,8 @@ async function refreshAllOrders(){
       <tr>
         <td style="font-weight:800;color:var(--primary);">${i+1}</td>
         <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:800;color:white;">${ini(o.orderer?.fullname||'?')}</div>${o.orderer?.fullname||'?'}</div></td>
-        <td>${o.receiver?.fullname||'?'}</td>
-        <td><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></td>
+        <td><div>${o.receiver?.fullname||'?'}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:3px;">${o.rating?'⭐'.repeat(o.rating):'không đánh giá'}</div></td>
+        <td><div><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></div>${o.notes?'<div style="font-size:.75rem;margin-top:4px;font-style:italic;color:var(--text-muted);">💬 '+o.notes+'</div>':''}</td>
         <td><b style="color:var(--primary);">40.000đ</b></td>
         <td style="color:var(--text-muted);">${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
         <td><button onclick="delOrder(${o.id})" style="border:none;background:#FEEFEF;color:var(--danger);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.77rem;font-weight:700;">🗑️ Xóa</button></td>
@@ -1340,6 +1377,86 @@ async function delUser(id){
   if(!confirm('Xóa tài khoản này?')) return;
   try{ await api('DELETE',`/api/users/${id}`); toast('Đã xóa tài khoản','info'); refreshUserMgmt(); }
   catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHANGE PASSWORD
+// ═══════════════════════════════════════════════════════════
+function showChangePasswordModal(){
+  document.getElementById('changePasswordModal').style.display='flex';
+}
+function closeChangePasswordModal(){
+  document.getElementById('changePasswordModal').style.display='none';
+  document.getElementById('changePwdError').style.display='none';
+  document.getElementById('newPwd').value='';
+  document.getElementById('newPwd2').value='';
+}
+function toggleNewPwd(){
+  const inp=document.getElementById('newPwd');
+  const icon=document.getElementById('newPwd-icon');
+  if(inp.type==='password'){
+    inp.type='text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type='password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+function toggleNewPwd2(){
+  const inp=document.getElementById('newPwd2');
+  const icon=document.getElementById('newPwd2-icon');
+  if(inp.type==='password'){
+    inp.type='text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    inp.type='password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+async function submitChangePwd(){
+  const pwd1=document.getElementById('newPwd').value;
+  const pwd2=document.getElementById('newPwd2').value;
+  const errEl=document.getElementById('changePwdError');
+  const btn=document.getElementById('changePwdBtn');
+  errEl.style.display='none';
+  if(!pwd1||!pwd2){ errEl.textContent='Vui lòng điền đầy đủ!'; errEl.style.display='block'; return; }
+  if(pwd1.length<6){ errEl.textContent='Mật khẩu phải có ít nhất 6 ký tự!'; errEl.style.display='block'; return; }
+  if(pwd1!==pwd2){ errEl.textContent='Mật khẩu xác nhận không khớp!'; errEl.style.display='block'; return; }
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Đang đổi...';
+  try{
+    await api('POST','/api/auth/change-password',{newPassword:pwd1});
+    toast('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.','ok');
+    setTimeout(()=>{ clearAuth(); showLogin(); },1500);
+  } catch(e){
+    errEl.textContent=e.message;
+    errEl.style.display='block';
+  } finally{
+    btn.disabled=false;
+    btn.innerHTML='Đổi mật khẩu';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════════════════
+async function refreshReviews(){
+  try{
+    const {data}=await api('GET','/api/reviews/today');
+    const body=document.getElementById('reviewBody');
+    document.getElementById('reviewCount').textContent=`${data.length} đánh giá`;
+    body.innerHTML=data.length?data.map(r=>`
+      <tr>
+        <td style="font-weight:700;">${r.receiver?.fullname||'?'}</td>
+        <td style="font-size:1.2rem;">${'⭐'.repeat(r.rating||0)}</td>
+        <td style="font-size:.85rem;color:var(--text-muted);max-width:300px;">${r.notes||'—'}</td>
+        <td style="color:var(--text-muted);">${new Date(r.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
+      </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--text-muted);">Chưa có đánh giá nào hôm nay</td></tr>';
+  } catch(e){ toast('Lỗi tải đánh giá: '+e.message,'err'); }
 }
 
 // ═══════════════════════════════════════════════════════════
