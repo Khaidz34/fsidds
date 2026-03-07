@@ -1477,7 +1477,6 @@ async function submitFeedback(){
   
   errEl.textContent = '';
   if(!message){ errEl.textContent = 'Vui lòng nhập nội dung góp ý!'; return; }
-  if(message.length < 6){ errEl.textContent = 'Nội dung góp ý phải có ít nhất 6 ký tự!'; return; }
   
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Đang gửi...';

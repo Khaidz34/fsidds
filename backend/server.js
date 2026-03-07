@@ -806,9 +806,9 @@ app.post('/api/feedback', authMiddleware, async (req, res) => {
     const { subject, message } = req.body;
     console.log('POST /api/feedback - user:', req.user.id, 'subject:', subject, 'message:', message);
     
-    if (!message || typeof message !== 'string' || message.trim().length < 6) {
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
       console.log('❌ Validation failed:', message);
-      return res.status(400).json({ error: 'Nội dung góp ý phải có ít nhất 6 ký tự' });
+      return res.status(400).json({ error: 'Vui lòng nhập nội dung góp ý' });
     }
     
     const { data, error } = await supabase
