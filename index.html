@@ -1477,16 +1477,14 @@ async function submitFeedback(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
   try{
-    const res = await api('POST','/api/feedback',{
+    await api('POST','/api/feedback',{
       subject: subject || null,
       message: message
     });
-    if(res.success || res.feedback){
-      toast('✅ Gửi góp ý thành công!');
-      document.getElementById('feedbackSubject').value = '';
-      document.getElementById('feedbackMessage').value = '';
-      await loadAdminFeedback();
-    }
+    toast('✅ Gửi góp ý thành công!');
+    document.getElementById('feedbackSubject').value = '';
+    document.getElementById('feedbackMessage').value = '';
+    await loadAdminFeedback();
   } catch(e){
     errEl.textContent = 'Lỗi: ' + e.message;
   } finally{
