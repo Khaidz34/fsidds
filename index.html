@@ -897,7 +897,7 @@ async function refreshMyOrders(){
     document.getElementById('myS1').textContent=ordsCur.length;
     document.getElementById('myS2').textContent=(ordsCur.length*40000/1000)+'k';
     const remaining = payInfo ? payInfo.remainingTotal : (ordsCur.length * 40000);
-    document.getElementById('myS3').textContent = payInfo?.paidAt ? '✅ Đã trả' : `Còn nợ: ${(remaining / 1000)}k`;
+    document.getElementById('myS3').textContent = payInfo?.paidAt ? `Đã trả: ${(payInfo.paidTotal / 1000)}k` : `Còn nợ: ${(remaining / 1000)}k`;
 
     // Calendar view
     document.getElementById('myCalendar').innerHTML = buildMyCalendarHtml(mon, ordsCur);
