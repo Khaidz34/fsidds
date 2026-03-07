@@ -1193,6 +1193,7 @@ function exportCSV(){
 }
 
 async function exportOrdersPDF(){
+  console.log('🚀 exportOrdersPDF() CALLED!');
   if(!cachedOrders.length){ toast('Không có đơn nào để xuất!','warn'); return; }
   if(!window.pdfMake){ toast('Thư viện PDF chưa sẵn sàng','err'); return; }
   
