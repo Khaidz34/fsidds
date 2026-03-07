@@ -171,7 +171,45 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   res.json(user);
 });
 
-// Đổi mật khẩu
+// Đổi mật khẩu - không cần token (cho trang quên mật khẩu)
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { username, newPassword } = req.body;
+    if (!username || !newPassword) {
+      return res.status(400).json({ error: 'Tên đăng nhập và mật khẩu mới là bắt buộc' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+
+    // Kiểm tra user tồn tại
+    const { data: user, error: userErr } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (userErr || !user) {
+      return res.status(404).json({ error: 'Tài khoản không tồn tại' });
+    }
+
+    // Hash password mới
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    const { error: updateErr } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('id', user.id);
+
+    if (updateErr) throw updateErr;
+
+    res.json({ success: true, message: 'Mật khẩu đã được cập nhật' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
 
 // ════════════════════════════════════════════════════════════
 // USERS ROUTES
