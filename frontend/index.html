@@ -1216,18 +1216,26 @@ async function exportOrdersPDF(){
   const body = [
     [{text:'STT',bold:true},{text:'Người ăn',bold:true},{text:'Số thứ tự món',bold:true},{text:'Ghi chú',bold:true}]
   ];
+  console.log('menuData.dishes:', menuData.dishes);
+  console.log('cachedOrders:', cachedOrders);
+  
   cachedOrders.forEach((o,i)=>{
     // Tìm số thứ tự của các món trong menuData
     let dishNumbers = [];
+    console.log(`Order ${i}: dish1_id=${o.dish1_id}, dish2_id=${o.dish2_id}`);
+    
     if(o.dish1_id && menuData?.dishes) {
       const idx1 = menuData.dishes.findIndex(d => d.id === o.dish1_id);
+      console.log(`dish1_id ${o.dish1_id} found at index: ${idx1}`);
       if(idx1 !== -1) dishNumbers.push(idx1 + 1);
     }
     if(o.dish2_id && menuData?.dishes) {
       const idx2 = menuData.dishes.findIndex(d => d.id === o.dish2_id);
+      console.log(`dish2_id ${o.dish2_id} found at index: ${idx2}`);
       if(idx2 !== -1) dishNumbers.push(idx2 + 1);
     }
     const dishStr = dishNumbers.length ? dishNumbers.join(', ') : '?';
+    console.log(`Final dishStr for order ${i}: ${dishStr}`);
     
     body.push([
       {text: i+1, fontSize:11},
