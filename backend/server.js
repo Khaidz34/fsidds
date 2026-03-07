@@ -808,7 +808,7 @@ app.post('/api/feedback', authMiddleware, async (req, res) => {
     const { data, error } = await supabase
       .from('feedbacks')
       .insert({ user_id: req.user.id, subject: subject || null, message })
-      .select()
+      .select('id, subject, message, status, created_at, user:user_id(id, fullname, username)')
       .single();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true, feedback: data });

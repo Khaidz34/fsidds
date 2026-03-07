@@ -1477,15 +1477,16 @@ async function submitFeedback(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
   try{
-    await api('POST','/api/feedback',{
+    const res = await api('POST','/api/feedback',{
       subject: subject || null,
       message: message
     });
-    toast('✅ Cảm ơn góp ý của bạn! Chúng tôi sẽ xem xét.');
-    document.getElementById('feedbackSubject').value = '';
-    document.getElementById('feedbackMessage').value = '';
-    // Reload feedback (admin thấy all, user thấy của họ)
-    if(CU.role === 'admin' || CU.role !== 'admin') await loadAdminFeedback();
+    if(res.success || res.feedback){
+      toast('✅ Gửi góp ý thành công!');
+      document.getElementById('feedbackSubject').value = '';
+      document.getElementById('feedbackMessage').value = '';
+      await loadAdminFeedback();
+    }
   } catch(e){
     errEl.textContent = 'Lỗi: ' + e.message;
   } finally{
