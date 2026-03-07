@@ -533,6 +533,7 @@ let menuData = null; // { id, date, dishes: [{id, name}] }
 let selDishes = []; // selected dish IDs (max 2)
 let allUsers = [];
 let cachedOrders = [];
+let myOrdersTimeout;
 
 const EMOJIS = ['🍗','🐟','🦐','🥩','🍳','🥦','🥕','🍤','🥬','🌽','🦀','🥚','🫕','🍖','🧅'];
 
@@ -912,6 +913,12 @@ async function refreshMyOrders(){
         <div style="text-align:right;"><div style="font-family:'Baloo 2',cursive;font-weight:800;color:var(--primary);">40k</div></div>
       </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có đơn nào tháng này</div>';
   } catch(e){ toast('Lỗi tải đơn: '+e.message,'err'); }
+
+  // Auto refresh every 30s if still on page
+  clearTimeout(myOrdersTimeout);
+  if(document.getElementById('page-myOrders').classList.contains('active')) {
+    myOrdersTimeout = setTimeout(refreshMyOrders, 30000);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
