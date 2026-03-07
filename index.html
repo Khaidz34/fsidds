@@ -874,6 +874,9 @@ async function submitOrder(){
     toast(`✅ Đặt thành công (${d1?.name} + ${d2?.name}) cho ${fu?.fullname||''}!`);
     selDishes=[];
     renderDishes();
+    // Refresh stats after new order
+    refreshDashboard();
+    if(document.getElementById('page-myOrders').classList.contains('active')) refreshMyOrders();
   } catch(e){ toast('Lỗi đặt cơm: '+e.message,'err'); }
   finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-check me-2"></i>ĐẶT CƠM NGAY'; }
 }
