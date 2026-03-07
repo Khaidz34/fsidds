@@ -1220,34 +1220,18 @@ async function exportOrdersPDF(){
   console.log('cachedOrders:', cachedOrders);
   
   cachedOrders.forEach((o,i)=>{
-    // Tìm số thứ tự của các món trong menuData
+    // Tìm số thứ tự của các món trong menuData dùng field 'order'
     let dishNumbers = [];
-    console.log(`Order ${i}: dish1=${JSON.stringify(o.dish1)}, dish2=${JSON.stringify(o.dish2)}`);
     
     if(o.dish1?.id) {
-      const dishId = o.dish1.id;
-      console.log(`Looking for dish1 id ${dishId} (type: ${typeof dishId})`);
-      console.log(`menuData.dishes:`, menuData.dishes.map(d => ({ id: d.id, idType: typeof d.id, name: d.name })));
-      
-      const idx1 = menuData.dishes.findIndex(d => {
-        const match = d.id === dishId || String(d.id) === String(dishId);
-        console.log(`  Comparing: d.id=${d.id} (${typeof d.id}) vs ${dishId} (${typeof dishId}) = ${match}`);
-        return match;
-      });
-      console.log(`dish1 id ${dishId} found at index: ${idx1}`);
-      if(idx1 !== -1) dishNumbers.push(idx1 + 1);
+      const dish = menuData.dishes.find(d => d.id === o.dish1.id);
+      console.log(`Order ${i}: Looking for dish1 id ${o.dish1.id}, found:`, dish);
+      if(dish) dishNumbers.push(dish.order);
     }
     if(o.dish2?.id) {
-      const dishId = o.dish2.id;
-      console.log(`Looking for dish2 id ${dishId} (type: ${typeof dishId})`);
-      
-      const idx2 = menuData.dishes.findIndex(d => {
-        const match = d.id === dishId || String(d.id) === String(dishId);
-        console.log(`  Comparing: d.id=${d.id} (${typeof d.id}) vs ${dishId} (${typeof dishId}) = ${match}`);
-        return match;
-      });
-      console.log(`dish2 id ${dishId} found at index: ${idx2}`);
-      if(idx2 !== -1) dishNumbers.push(idx2 + 1);
+      const dish = menuData.dishes.find(d => d.id === o.dish2.id);
+      console.log(`Order ${i}: Looking for dish2 id ${o.dish2.id}, found:`, dish);
+      if(dish) dishNumbers.push(dish.order);
     }
     const dishStr = dishNumbers.length ? dishNumbers.join(', ') : '?';
     console.log(`Final dishStr for order ${i}: ${dishStr}`);
