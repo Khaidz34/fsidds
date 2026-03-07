@@ -1216,25 +1216,43 @@ async function exportOrdersPDF(){
   const body = [
     [{text:'STT',bold:true},{text:'Người ăn',bold:true},{text:'Số thứ tự món',bold:true},{text:'Ghi chú',bold:true}]
   ];
-  console.log('menuData.dishes:', menuData.dishes);
-  console.log('cachedOrders:', cachedOrders);
+  console.log('=== exportOrdersPDF START ===');
+  console.log('menuData:', JSON.stringify(menuData, null, 2));
+  console.log('menuData.dishes sample:', menuData.dishes?.slice(0, 2));
+  console.log('cachedOrders sample:', cachedOrders?.slice(0, 2));
   
   cachedOrders.forEach((o,i)=>{
     // Tìm số thứ tự của các món trong menuData dùng field 'order'
     let dishNumbers = [];
+    console.log(`\n--- Order ${i} ---`);
+    console.log('o.dish1:', o.dish1);
+    console.log('o.dish2:', o.dish2);
     
     if(o.dish1?.id) {
+      console.log(`Searching for dish1.id=${o.dish1.id}`);
+      console.log('menuData.dishes:', menuData.dishes);
       const dish = menuData.dishes.find(d => d.id === o.dish1.id);
-      console.log(`Order ${i}: Looking for dish1 id ${o.dish1.id}, found:`, dish);
-      if(dish) dishNumbers.push(dish.order);
+      console.log(`Found dish1:`, dish);
+      if(dish) {
+        console.log(`dish.order = ${dish.order}`);
+        dishNumbers.push(dish.order);
+      } else {
+        console.warn(`NOT FOUND: dish1.id ${o.dish1.id}`);
+      }
     }
     if(o.dish2?.id) {
+      console.log(`Searching for dish2.id=${o.dish2.id}`);
       const dish = menuData.dishes.find(d => d.id === o.dish2.id);
-      console.log(`Order ${i}: Looking for dish2 id ${o.dish2.id}, found:`, dish);
-      if(dish) dishNumbers.push(dish.order);
+      console.log(`Found dish2:`, dish);
+      if(dish) {
+        console.log(`dish.order = ${dish.order}`);
+        dishNumbers.push(dish.order);
+      } else {
+        console.warn(`NOT FOUND: dish2.id ${o.dish2.id}`);
+      }
     }
     const dishStr = dishNumbers.length ? dishNumbers.join(', ') : '?';
-    console.log(`Final dishStr for order ${i}: ${dishStr}`);
+    console.log(`FINAL dishStr for order ${i}: "${dishStr}"`);
     
     body.push([
       {text: i+1, fontSize:11},
