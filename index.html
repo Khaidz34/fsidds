@@ -875,9 +875,9 @@ async function submitOrder(){
     toast(`✅ Đặt thành công (${d1?.name} + ${d2?.name}) cho ${fu?.fullname||''}!`);
     selDishes=[];
     renderDishes();
-    // Refresh stats after new order
+    // Refresh stats after new order (always, not just when on page)
     refreshDashboard();
-    if(document.getElementById('page-myOrders').classList.contains('active')) refreshMyOrders();
+    refreshMyOrders();
   } catch(e){ toast('Lỗi đặt cơm: '+e.message,'err'); }
   finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-check me-2"></i>ĐẶT CƠM NGAY'; }
 }
@@ -896,8 +896,8 @@ async function refreshMyOrders(){
     // Header cards
     document.getElementById('myS1').textContent=ordsCur.length;
     document.getElementById('myS2').textContent=(ordsCur.length*40000/1000)+'k';
-    const remaining = payInfo ? payInfo.remainingTotal : (ordsCur.length * 40000);
-    document.getElementById('myS3').textContent = payInfo?.paidAt ? `Đã trả: ${(payInfo.paidTotal / 1000)}k` : `Còn nợ: ${(remaining / 1000)}k`;
+    const remaining = payInfo?.remainingTotal !== undefined ? payInfo.remainingTotal : (ordsCur.length * 40000);
+    document.getElementById('myS3').textContent = remaining === 0 ? `Đã trả: ${(payInfo?.paidTotal / 1000)}k` : `Còn nợ: ${(remaining / 1000)}k`;
 
     // Calendar view
     document.getElementById('myCalendar').innerHTML = buildMyCalendarHtml(mon, ordsCur);
