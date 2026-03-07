@@ -804,17 +804,27 @@ app.post('/api/payments/mark-paid', authMiddleware, adminMiddleware, async (req,
 app.post('/api/feedback', authMiddleware, async (req, res) => {
   try {
     const { subject, message } = req.body;
-    if (!message || message.trim().length < 6) return res.status(400).json({ error: 'Nội dung góp ý quá ngắn' });
+    console.log('POST /api/feedback - user:', req.user.id, 'subject:', subject, 'message:', message);
+    
+    if (!message || typeof message !== 'string' || message.trim().length < 6) {
+      console.log('❌ Validation failed:', message);
+      return res.status(400).json({ error: 'Nội dung góp ý phải có ít nhất 6 ký tự' });
+    }
+    
     const { data, error } = await supabase
       .from('feedbacks')
       .insert({ user_id: req.user.id, subject: subject || null, message })
       .select('id, subject, message, status, created_at, user:user_id(id, fullname, username)')
       .single();
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) {
+      console.error('❌ Database error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+    console.log('✅ Feedback saved:', data.id);
     res.json({ success: true, feedback: data });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Lỗi server' });
+    console.error('❌ Server error:', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 
