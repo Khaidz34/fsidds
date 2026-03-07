@@ -786,6 +786,7 @@ function showLogin(){
   loading(false);
   document.getElementById('loginPage').style.display='flex';
   document.getElementById('registerPage').style.display='none';
+  document.getElementById('resetPasswordPage').style.display='none';
   document.getElementById('mainApp').style.display='none';
   // load remembered
   const r = JSON.parse(localStorage.getItem('fsi_remember')||'null');
