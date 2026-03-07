@@ -461,6 +461,46 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
   }
 });
 
+// Cập nhật đánh giá cho 1 đơn (chỉ receiver hoặc admin, chỉ khi đã qua ngày ăn)
+app.patch('/api/orders/:id/rating', authMiddleware, async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const { rating } = req.body;
+    if (!orderId) return res.status(400).json({ error: 'Order id không hợp lệ' });
+    if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Đánh giá phải từ 1 đến 5' });
+
+    // Lấy đơn
+    const { data: order, error: ordErr } = await supabase
+      .from('orders')
+      .select('id, ordered_for, date')
+      .eq('id', orderId)
+      .single();
+    if (ordErr || !order) return res.status(404).json({ error: 'Đơn không tồn tại' });
+
+    // Chỉ receiver hoặc admin mới được đánh giá
+    if (req.user.role !== 'admin' && req.user.id !== order.ordered_for) {
+      return res.status(403).json({ error: 'Không có quyền đánh giá đơn này' });
+    }
+
+    // Chỉ cho phép đánh giá khi đã qua ngày ăn
+    const today = new Date().toISOString().split('T')[0];
+    if (!(order.date < today) && req.user.role !== 'admin') {
+      return res.status(400).json({ error: 'Chỉ được đánh giá sau khi đã ăn xong' });
+    }
+
+    const { error: upErr } = await supabase
+      .from('orders')
+      .update({ rating })
+      .eq('id', orderId);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
 // Admin: xóa đơn
 app.delete('/api/orders/:id', authMiddleware, adminMiddleware, async (req, res) => {
   const { error } = await supabase.from('orders').delete().eq('id', req.params.id);
