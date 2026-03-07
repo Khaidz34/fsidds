@@ -172,24 +172,6 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 });
 
 // Đổi mật khẩu
-app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
-  try {
-    const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 6 ký tự' });
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const { error } = await supabase
-      .from('users')
-      .update({ password: hashedPassword })
-      .eq('id', req.user.id);
-    if (error) throw error;
-    res.json({ success: true, message: 'Đổi mật khẩu thành công' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Lỗi server' });
-  }
-});
 
 // ════════════════════════════════════════════════════════════
 // USERS ROUTES
