@@ -1192,9 +1192,24 @@ function exportCSV(){
   toast('Đã xuất CSV 📊');
 }
 
-function exportOrdersPDF(){
+async function exportOrdersPDF(){
   if(!cachedOrders.length){ toast('Không có đơn nào để xuất!','warn'); return; }
   if(!window.pdfMake){ toast('Thư viện PDF chưa sẵn sàng','err'); return; }
+  
+  // Ensure menuData is loaded
+  if(!menuData || !menuData.dishes) {
+    try {
+      menuData = await api('GET', '/api/menu/today');
+      if(!menuData || !menuData.dishes) {
+        toast('Không thể tải menu hôm nay','err');
+        return;
+      }
+    } catch(e) {
+      toast('Lỗi tải menu: ' + e.message, 'err');
+      return;
+    }
+  }
+  
   const today = new Date();
   const dateStr = today.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
 
