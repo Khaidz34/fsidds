@@ -408,14 +408,6 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
 
     if (error) throw error;
 
-    // Khi có đơn mới sau khi đã chốt thanh toán, tự động đưa trạng thái về "chưa thanh toán"
-    // bằng cách xóa bản ghi payments (nếu có) cho người được ăn trong tháng đó.
-    await supabase
-      .from('payments')
-      .delete()
-      .eq('user_id', parseInt(orderedFor))
-      .eq('month', month);
-
     res.json(order);
   } catch (err) {
     console.error(err);
