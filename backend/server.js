@@ -818,13 +818,19 @@ app.post('/api/feedback', authMiddleware, async (req, res) => {
   }
 });
 
-// Admin: Lấy tất cả góp ý
-app.get('/api/feedback', authMiddleware, adminMiddleware, async (req, res) => {
+// Admin: Lấy tất cả góp ý (admin), hoặc feedback của user hiện tại (user)
+app.get('/api/feedback', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('feedbacks')
-      .select('id, subject, message, status, created_at, user:user_id(id, fullname, username)')
-      .order('created_at', { ascending: false });
+      .select('id, subject, message, status, created_at, user:user_id(id, fullname, username)');
+    
+    // Nếu không phải admin, chỉ lấy feedback của user hiện tại
+    if (req.user.role !== 'admin') {
+      query = query.eq('user_id', req.user.id);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
   } catch (e) {
