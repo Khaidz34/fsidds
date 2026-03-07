@@ -99,6 +99,19 @@ VALUES (
   'admin'
 ) ON CONFLICT (username) DO NOTHING;
 
+-- 7. FEEDBACKS (góp ý, phản hồi từ người dùng)
+CREATE TABLE IF NOT EXISTS feedbacks (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  subject    VARCHAR(255),
+  message    TEXT NOT NULL,
+  status     VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open','reviewed','closed')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedbacks_user_id ON feedbacks(user_id);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks(created_at);
+
 -- ─── Xem dữ liệu ──────────────────────────────────────────
 -- SELECT * FROM users;
 -- SELECT * FROM menus;

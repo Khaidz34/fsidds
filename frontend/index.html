@@ -376,7 +376,7 @@ textarea.inp-fc{resize:none;}
       <button class="slink admin-only" onclick="showPage('statistics')"><span class="slink-ic">📈</span>Thống kê</button>
       <button class="slink admin-only" onclick="showPage('payment')"><span class="slink-ic">💰</span>Thanh toán</button>
       <button class="slink admin-only" onclick="showPage('invoice')"><span class="slink-ic">🧾</span>Xuất hóa đơn PDF</button>
-      <button class="slink admin-only" onclick="showPage('reviews')"><span class="slink-ic">⭐</span>Đánh giá</button>
+      <button class="slink admin-only" onclick="showPage('feedback')"><span class="slink-ic">💬</span>Cải thiện phần mềm</button>
       <button class="slink admin-only" onclick="showPage('userMgmt')"><span class="slink-ic">👥</span>Quản lý tài khoản</button>
     </nav>
     <div class="sidebar-bot">
@@ -449,17 +449,6 @@ textarea.inp-fc{resize:none;}
                     <button type="button" class="note-btn" onclick="toggleNote('Thêm thìa')" style="border:2px solid #EEF2F8;background:white;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;">Thêm thìa</button>
                   </div>
                   <textarea class="inp-fc" id="orderNotes" placeholder="Ghi chú khác..." rows="2" style="margin-top:8px;"></textarea>
-                </div>
-                <div class="mb-4">
-                  <div class="slbl">Đánh giá bữa cơm hôm nay (sao)</div>
-                  <div style="display:flex;gap:8px;margin-top:6px;font-size:1.5rem;">
-                    <button type="button" onclick="setRating(1)" data-rating="1" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
-                    <button type="button" onclick="setRating(2)" data-rating="2" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
-                    <button type="button" onclick="setRating(3)" data-rating="3" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
-                    <button type="button" onclick="setRating(4)" data-rating="4" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
-                    <button type="button" onclick="setRating(5)" data-rating="5" style="background:none;border:none;cursor:pointer;opacity:.5;transition:all .2s;">⭐</button>
-                  </div>
-                  <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;">Đã chọn: <span id="ratingDisplay">0</span> sao</div>
                 </div>
                 <div class="mb-4 p-3" style="background:linear-gradient(135deg,#EBF3FF,#F5F9FF);border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
                   <span style="font-weight:700;color:var(--text-muted);font-size:.85rem;">💰 Giá 1 suất</span>
@@ -573,12 +562,27 @@ textarea.inp-fc{resize:none;}
         </div>
       </div>
 
-      <!-- ĐÁNH GIÁ -->
-      <div id="page-reviews" class="page">
-        <div class="sec-title">⭐ Đánh giá bữa cơm hôm nay</div><div class="sec-sub">Tổng hợp đánh giá từ nhân viên</div>
-        <div class="card-m">
-          <div class="card-hd"><div class="card-hd-t">Danh sách đánh giá</div><span class="chip" id="reviewCount">0 đánh giá</span></div>
-          <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Người ăn</th><th>Sao</th><th>Ghi chú</th><th>Thời gian</th></tr></thead><tbody id="reviewBody"><tr><td colspan="4" style="text-align:center;padding:22px;color:var(--text-muted);">Đang tải...</td></tr></tbody></table></div>
+      <!-- CẢI THIỆN PHẦN MỀM -->
+      <div id="page-feedback" class="page">
+        <div class="sec-title">💬 Cải thiện phần mềm</div><div class="sec-sub">Góp ý và đánh giá để giúp hệ thống tốt hơn</div>
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card-m">
+              <div class="card-hd"><div class="card-hd-t">➕ Gửi góp ý của bạn</div></div>
+              <div class="p-4">
+                <div class="mb-3"><label class="form-label">Chủ đề (tùy chọn)</label><input type="text" class="inp-fc" id="feedbackSubject" placeholder="Vd: Giao diện, Tính năng, Hiệu suất..."></div>
+                <div class="mb-4"><label class="form-label">Nội dung góp ý</label><textarea class="inp-fc" id="feedbackMessage" rows="6" placeholder="Hãy chia sẻ ý kiến của bạn để chúng tôi cải thiện phần mềm..."></textarea></div>
+                <button class="btn-order w-100" onclick="submitFeedback()"><i class="fas fa-paper-plane me-2"></i>GỬI GÓP Ý</button>
+                <div class="auth-error" id="feedbackError" style="margin-top:12px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card-m admin-only" style="display:none;">
+              <div class="card-hd"><div class="card-hd-t">Góp ý gần đây</div><span class="chip" id="feedbackCount">0 góp ý</span></div>
+              <div style="overflow-x:auto;max-height:500px;overflow-y:auto;"><div id="feedbackList" style="padding:16px;"><div style="text-align:center;color:var(--text-muted);">Đang tải...</div></div></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -949,6 +953,7 @@ function showPage(id){
   if(id==='payment')    refreshPayment();
   if(id==='invoice')    refreshInvoice();
   if(id==='menuMgmt')   refreshMenuPreview();
+  if(id==='feedback')   loadAdminFeedback();
   if(id==='reviews')    refreshReviews();
   if(id==='userMgmt')   refreshUserMgmt();
 }
@@ -1068,14 +1073,6 @@ function toggleNote(note){
 }
 
 let currentRating = 0;
-function setRating(stars){
-  currentRating = stars;
-  document.getElementById('ratingDisplay').textContent = stars;
-  document.querySelectorAll('[data-rating]').forEach(btn => {
-    const btnStars = parseInt(btn.getAttribute('data-rating'));
-    btn.style.opacity = btnStars <= stars ? '1' : '0.5';
-  });
-}
 
 async function submitOrder(){
   if(selDishes.length === 0){ toast('Vui lòng chọn ít nhất 1 món!','warn'); return; }
@@ -1083,7 +1080,6 @@ async function submitOrder(){
   const forId=parseInt(document.getElementById('orderFor').value);
   if(!forId){ toast('Vui lòng chọn người ăn!','warn'); return; }
   const notes = document.getElementById('orderNotes').value.trim();
-  const rating = currentRating > 0 ? currentRating : null;
   const btn=document.getElementById('orderBtn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang đặt...';
   try{
@@ -1091,8 +1087,7 @@ async function submitOrder(){
       dish1Id:selDishes[0], 
       dish2Id:selDishes[1] || null, 
       orderedFor:forId,
-      notes: notes || null,
-      rating: rating
+      notes: notes || null
     });
     const d1=menuData.dishes.find(x=>x.id===selDishes[0]);
     const d2=selDishes[1] ? menuData.dishes.find(x=>x.id===selDishes[1]) : null;
@@ -1100,10 +1095,7 @@ async function submitOrder(){
     const dishText = d2 ? `${d1?.name} + ${d2.name}` : d1?.name;
     toast(`✅ Đặt thành công (${dishText}) cho ${fu?.fullname||''}!`);
     selDishes=[];
-    currentRating=0;
     document.getElementById('orderNotes').value='';
-    document.getElementById('ratingDisplay').textContent='0';
-    document.querySelectorAll('[data-rating]').forEach(btn => btn.style.opacity='0.5');
     document.querySelectorAll('.note-btn').forEach(btn => { btn.style.borderColor='#EEF2F8'; btn.style.background='white'; btn.style.color='var(--text-muted)'; });
     renderDishes();
     // Refresh stats after new order (always, not just when on page)
@@ -1141,10 +1133,11 @@ async function refreshMyOrders(){
       <div class="order-hcard">
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-size:1.7rem;">🍽️</span>
-          <div style="flex:1"><div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
-          <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div>
-          ${o.rating?'<div style="font-size:.75rem;margin-top:4px;color:#FFA500;">Đánh giá: '+('⭐'.repeat(o.rating))+'</div>':''}
-          ${o.notes?'<div style="font-size:.75rem;margin-top:4px;color:var(--text-muted);font-style:italic;">💬 Ghi chú: '+o.notes+'</div>':''}
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:var(--dark);">${o.dish1?.name||'?'} <span style="color:var(--text-muted);font-weight:600;">+</span> ${o.dish2?.name||'?'}</div>
+            <div style="font-size:.75rem;color:var(--text-muted);">Đặt bởi ${o.orderer?.fullname||'?'} · ${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} · ${o.date}</div>
+            ${o.notes?'<div style="font-size:.75rem;margin-top:4px;color:var(--text-muted);font-style:italic;">💬 Ghi chú: '+o.notes+'</div>':''}
+            <!-- Meal rating removed -->
           </div>
         </div>
         <div style="text-align:right;"><div style="font-family:'Baloo 2',cursive;font-weight:800;color:var(--primary);">40k</div></div>
@@ -1172,7 +1165,7 @@ async function refreshAllOrders(){
       <tr>
         <td style="font-weight:800;color:var(--primary);">${i+1}</td>
         <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:800;color:white;">${ini(o.orderer?.fullname||'?')}</div>${o.orderer?.fullname||'?'}</div></td>
-        <td><div>${o.receiver?.fullname||'?'}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:3px;">${o.rating?'⭐'.repeat(o.rating):'không đánh giá'}</div></td>
+        <td><div>${o.receiver?.fullname||'?'}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:3px;">—</div></td>
         <td><div><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></div>${o.notes?'<div style="font-size:.75rem;margin-top:4px;font-style:italic;color:var(--text-muted);">💬 '+o.notes+'</div>':''}</td>
         <td><b style="color:var(--primary);">40.000đ</b></td>
         <td style="color:var(--text-muted);">${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
@@ -1467,6 +1460,67 @@ async function delUser(id){
   if(!confirm('Xóa tài khoản này?')) return;
   try{ await api('DELETE',`/api/users/${id}`); toast('Đã xóa tài khoản','info'); refreshUserMgmt(); }
   catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FEEDBACK
+// ═══════════════════════════════════════════════════════════
+async function submitFeedback(){
+  const subject = document.getElementById('feedbackSubject').value.trim();
+  const message = document.getElementById('feedbackMessage').value.trim();
+  const errEl = document.getElementById('feedbackError');
+  const btn = event.target;
+  
+  errEl.textContent = '';
+  if(!message){ errEl.textContent = 'Vui lòng nhập nội dung góp ý!'; return; }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
+  try{
+    await api('POST','/api/feedback',{
+      subject: subject || null,
+      message: message
+    });
+    toast('✅ Cảm ơn góp ý của bạn! Chúng tôi sẽ xem xét.');
+    document.getElementById('feedbackSubject').value = '';
+    document.getElementById('feedbackMessage').value = '';
+    await loadAdminFeedback();
+  } catch(e){
+    errEl.textContent = 'Lỗi: ' + e.message;
+  } finally{
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>GỬI GÓP Ý';
+  }
+}
+
+async function loadAdminFeedback(){
+  try{
+    const feedbacks = await api('GET','/api/feedback');
+    const listEl = document.getElementById('feedbackList');
+    const countEl = document.getElementById('feedbackCount');
+    
+    countEl.textContent = `${feedbacks.length} góp ý`;
+    if(!feedbacks.length){
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);">Chưa có góp ý nào</div>';
+      return;
+    }
+    
+    listEl.innerHTML = feedbacks.map(f=>`
+      <div style="padding:12px;border:1px solid #EEF2F8;border-radius:8px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+          <div style="flex:1;">
+            ${f.subject?`<div style="font-weight:700;color:var(--primary);">${f.subject}</div>`:''}
+            <div style="font-size:.85rem;color:var(--text-muted);margin:4px 0;">${f.user?.fullname||'?'}</div>
+            <div style="font-size:.85rem;margin-top:6px;color:var(--dark);">${f.message}</div>
+          </div>
+          <div style="text-align:right;margin-left:12px;">
+            <div style="font-size:.75rem;color:var(--text-muted);">${new Date(f.created_at).toLocaleString('vi-VN')}</div>
+            ${f.status?`<div style="font-size:.7rem;margin-top:4px;color:var(--primary);font-weight:700;">${f.status}</div>`:''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e){ toast('Lỗi tải góp ý: '+e.message,'err'); }
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -461,45 +461,7 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
   }
 });
 
-// Cập nhật đánh giá cho 1 đơn (chỉ receiver hoặc admin, chỉ khi đã qua ngày ăn)
-app.patch('/api/orders/:id/rating', authMiddleware, async (req, res) => {
-  try {
-    const orderId = parseInt(req.params.id);
-    const { rating } = req.body;
-    if (!orderId) return res.status(400).json({ error: 'Order id không hợp lệ' });
-    if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Đánh giá phải từ 1 đến 5' });
-
-    // Lấy đơn
-    const { data: order, error: ordErr } = await supabase
-      .from('orders')
-      .select('id, ordered_for, date')
-      .eq('id', orderId)
-      .single();
-    if (ordErr || !order) return res.status(404).json({ error: 'Đơn không tồn tại' });
-
-    // Chỉ receiver hoặc admin mới được đánh giá
-    if (req.user.role !== 'admin' && req.user.id !== order.ordered_for) {
-      return res.status(403).json({ error: 'Không có quyền đánh giá đơn này' });
-    }
-
-    // Chỉ cho phép đánh giá khi đã qua ngày ăn
-    const today = new Date().toISOString().split('T')[0];
-    if (!(order.date < today) && req.user.role !== 'admin') {
-      return res.status(400).json({ error: 'Chỉ được đánh giá sau khi đã ăn xong' });
-    }
-
-    const { error: upErr } = await supabase
-      .from('orders')
-      .update({ rating })
-      .eq('id', orderId);
-    if (upErr) return res.status(500).json({ error: upErr.message });
-
-    res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Lỗi server' });
-  }
-});
+// NOTE: Meal rating functionality removed. Use feedbacks for product improvements.
 
 // Admin: xóa đơn
 app.delete('/api/orders/:id', authMiddleware, adminMiddleware, async (req, res) => {
@@ -832,33 +794,57 @@ app.post('/api/payments/mark-paid', authMiddleware, adminMiddleware, async (req,
   }
 });
 
+// REVIEWS removed: replaced by feedbacks routes below
+
 // ════════════════════════════════════════════════════════════
-// REVIEWS ROUTES
+// FEEDBACK ROUTES (Góp ý cải thiện phần mềm)
 // ════════════════════════════════════════════════════════════
 
-// Admin: Lấy tất cả đánh giá hôm nay
-app.get('/api/reviews/today', authMiddleware, adminMiddleware, async (req, res) => {
+// Người dùng gửi góp ý
+app.post('/api/feedback', authMiddleware, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const { subject, message } = req.body;
+    if (!message || message.trim().length < 6) return res.status(400).json({ error: 'Nội dung góp ý quá ngắn' });
     const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        id, date, rating, notes, created_at,
-        receiver:ordered_for(id, fullname),
-        dish1:dish1_id(id, name),
-        dish2:dish2_id(id, name),
-        orderer:ordered_by(id, fullname)
-      `)
-      .eq('date', today)
-      .not('rating', 'is', null)
-      .order('created_at', { ascending: false });
-
+      .from('feedbacks')
+      .insert({ user_id: req.user.id, subject: subject || null, message })
+      .select()
+      .single();
     if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true, feedback: data });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
 
+// Admin: Lấy tất cả góp ý
+app.get('/api/feedback', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('feedbacks')
+      .select('id, subject, message, status, created_at, user:user_id(id, fullname, username)')
+      .order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
     res.json(data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Lỗi lấy đánh giá' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
+// Admin: cập nhật trạng thái góp ý
+app.patch('/api/feedback/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { status } = req.body;
+    if (!['open','reviewed','closed'].includes(status)) return res.status(400).json({ error: 'Trạng thái không hợp lệ' });
+    const { error } = await supabase.from('feedbacks').update({ status }).eq('id', id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Lỗi server' });
   }
 });
 
