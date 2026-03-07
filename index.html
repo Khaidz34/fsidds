@@ -1471,21 +1471,27 @@ async function submitFeedback(){
   const errEl = document.getElementById('feedbackError');
   const btn = event.target;
   
+  console.log('=== submitFeedback ===', subject, message);
+  
   errEl.textContent = '';
   if(!message){ errEl.textContent = 'Vui lòng nhập nội dung góp ý!'; return; }
   
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
   try{
+    console.log('Gửi feedback...');
     await api('POST','/api/feedback',{
       subject: subject || null,
       message: message
     });
+    console.log('✅ Gửi thành công!');
     toast('✅ Gửi góp ý thành công!');
     document.getElementById('feedbackSubject').value = '';
     document.getElementById('feedbackMessage').value = '';
+    console.log('Clear form, loading feedback...');
     await loadAdminFeedback();
   } catch(e){
+    console.error('❌ Error:', e.message);
     errEl.textContent = 'Lỗi: ' + e.message;
   } finally{
     btn.disabled = false;
@@ -1495,7 +1501,9 @@ async function submitFeedback(){
 
 async function loadAdminFeedback(){
   try{
+    console.log('=== loadAdminFeedback ===');
     const feedbacks = await api('GET','/api/feedback');
+    console.log('Feedbacks:', feedbacks);
     const listEl = document.getElementById('feedbackList');
     const countEl = document.getElementById('feedbackCount');
     
@@ -1550,7 +1558,7 @@ async function loadAdminFeedback(){
       `).join('');
     }
   } catch(e){ 
-    // Silent fail
+    console.error('❌ loadAdminFeedback error:', e.message);
   }
 }
 
