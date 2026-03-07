@@ -953,6 +953,7 @@ function showPage(id){
   if(id==='payment')    refreshPayment();
   if(id==='invoice')    refreshInvoice();
   if(id==='menuMgmt')   refreshMenuPreview();
+  if(id==='feedback')   loadAdminFeedback();
   if(id==='reviews')    refreshReviews();
   if(id==='userMgmt')   refreshUserMgmt();
 }
@@ -1071,7 +1072,7 @@ function toggleNote(note){
   }
 }
 
-// Meal rating removed — use Feedback page instead
+let currentRating = 0;
 
 async function submitOrder(){
   if(selDishes.length === 0){ toast('Vui lòng chọn ít nhất 1 món!','warn'); return; }
@@ -1079,7 +1080,6 @@ async function submitOrder(){
   const forId=parseInt(document.getElementById('orderFor').value);
   if(!forId){ toast('Vui lòng chọn người ăn!','warn'); return; }
   const notes = document.getElementById('orderNotes').value.trim();
-  const rating = currentRating > 0 ? currentRating : null;
   const btn=document.getElementById('orderBtn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Đang đặt...';
   try{
@@ -1087,8 +1087,7 @@ async function submitOrder(){
       dish1Id:selDishes[0], 
       dish2Id:selDishes[1] || null, 
       orderedFor:forId,
-      notes: notes || null,
-      rating: rating
+      notes: notes || null
     });
     const d1=menuData.dishes.find(x=>x.id===selDishes[0]);
     const d2=selDishes[1] ? menuData.dishes.find(x=>x.id===selDishes[1]) : null;
@@ -1096,10 +1095,7 @@ async function submitOrder(){
     const dishText = d2 ? `${d1?.name} + ${d2.name}` : d1?.name;
     toast(`✅ Đặt thành công (${dishText}) cho ${fu?.fullname||''}!`);
     selDishes=[];
-    currentRating=0;
     document.getElementById('orderNotes').value='';
-    document.getElementById('ratingDisplay').textContent='0';
-    document.querySelectorAll('[data-rating]').forEach(btn => btn.style.opacity='0.5');
     document.querySelectorAll('.note-btn').forEach(btn => { btn.style.borderColor='#EEF2F8'; btn.style.background='white'; btn.style.color='var(--text-muted)'; });
     renderDishes();
     // Refresh stats after new order (always, not just when on page)
@@ -1169,7 +1165,7 @@ async function refreshAllOrders(){
       <tr>
         <td style="font-weight:800;color:var(--primary);">${i+1}</td>
         <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;background:linear-gradient(135deg,var(--primary),#0A84FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:800;color:white;">${ini(o.orderer?.fullname||'?')}</div>${o.orderer?.fullname||'?'}</div></td>
-        <td><div>${o.receiver?.fullname||'?'}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:3px;">${o.rating?'⭐'.repeat(o.rating):'không đánh giá'}</div></td>
+        <td><div>${o.receiver?.fullname||'?'}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:3px;">—</div></td>
         <td><div><span class="bdg-dish">🍽️ ${o.dish1?.name||'?'}</span><span class="bdg-dish">🍽️ ${o.dish2?.name||'?'}</span></div>${o.notes?'<div style="font-size:.75rem;margin-top:4px;font-style:italic;color:var(--text-muted);">💬 '+o.notes+'</div>':''}</td>
         <td><b style="color:var(--primary);">40.000đ</b></td>
         <td style="color:var(--text-muted);">${new Date(o.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</td>
@@ -1464,6 +1460,77 @@ async function delUser(id){
   if(!confirm('Xóa tài khoản này?')) return;
   try{ await api('DELETE',`/api/users/${id}`); toast('Đã xóa tài khoản','info'); refreshUserMgmt(); }
   catch(e){ toast('Lỗi: '+e.message,'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FEEDBACK
+// ═══════════════════════════════════════════════════════════
+async function submitFeedback(){
+  const subject = document.getElementById('feedbackSubject').value.trim();
+  const message = document.getElementById('feedbackMessage').value.trim();
+  const errEl = document.getElementById('feedbackError');
+  const btn = event.target;
+  
+  errEl.textContent = '';
+  if(!message){ errEl.textContent = 'Vui lòng nhập nội dung góp ý!'; return; }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
+  try{
+    await api('POST','/api/feedback',{
+      subject: subject || null,
+      message: message
+    });
+    toast('✅ Cảm ơn góp ý của bạn! Chúng tôi sẽ xem xét.');
+    document.getElementById('feedbackSubject').value = '';
+    document.getElementById('feedbackMessage').value = '';
+    // Reload feedback (admin thấy all, user thấy của họ)
+    if(CU.role === 'admin' || CU.role !== 'admin') await loadAdminFeedback();
+  } catch(e){
+    errEl.textContent = 'Lỗi: ' + e.message;
+  } finally{
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>GỬI GÓP Ý';
+  }
+}
+
+async function loadAdminFeedback(){
+  try{
+    const feedbacks = await api('GET','/api/feedback');
+    const listEl = document.getElementById('feedbackList');
+    const countEl = document.getElementById('feedbackCount');
+    
+    // Chỉ show admin feedback list cho admin
+    const adminCard = document.querySelector('.card-m.admin-only');
+    if(CU.role === 'admin' && adminCard) {
+      adminCard.style.display = '';
+      countEl.textContent = `${feedbacks.length} góp ý`;
+      if(!feedbacks.length){
+        listEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);">Chưa có góp ý nào</div>';
+        return;
+      }
+      
+      listEl.innerHTML = feedbacks.map(f=>`
+        <div style="padding:12px;border:1px solid #EEF2F8;border-radius:8px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:start;">
+            <div style="flex:1;">
+              ${f.subject?`<div style="font-weight:700;color:var(--primary);">${f.subject}</div>`:''}
+              <div style="font-size:.85rem;color:var(--text-muted);margin:4px 0;">${f.user?.fullname||'?'}</div>
+              <div style="font-size:.85rem;margin-top:6px;color:var(--dark);">${f.message}</div>
+            </div>
+            <div style="text-align:right;margin-left:12px;">
+              <div style="font-size:.75rem;color:var(--text-muted);">${new Date(f.created_at).toLocaleString('vi-VN')}</div>
+              ${f.status?`<div style="font-size:.7rem;margin-top:4px;color:var(--primary);font-weight:700;">${f.status}</div>`:''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      if(adminCard) adminCard.style.display = 'none';
+    }
+  } catch(e){ 
+    // Silent fail para user không nhìn thấy error khi họ không phải admin
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
