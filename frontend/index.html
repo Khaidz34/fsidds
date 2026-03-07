@@ -911,6 +911,8 @@ async function initApp(){
   try{
     // Load users list
     allUsers = await api('GET','/api/users');
+    // Load menu data
+    menuData = await api('GET','/api/menu/today');
     // Setup UI
     document.getElementById('loginPage').style.display='none';
     document.getElementById('registerPage').style.display='none';
