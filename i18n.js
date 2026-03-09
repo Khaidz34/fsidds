@@ -213,12 +213,44 @@ function t(key) {
   return translations[currentLang]?.[key] || translations['vi'][key] || key;
 }
 
-// Change language
+// Change language with smooth animation
 function setLanguage(lang) {
   if (!translations[lang]) return;
-  currentLang = lang;
-  localStorage.setItem('appLang', lang);
-  updatePageTranslations();
+  
+  // Add fade out animation
+  document.body.style.opacity = '0.95';
+  
+  setTimeout(() => {
+    currentLang = lang;
+    localStorage.setItem('appLang', lang);
+    updatePageTranslations();
+    
+    // Update all language switchers
+    document.querySelectorAll('.lang-switcher').forEach(switcher => {
+      switcher.setAttribute('data-active', lang);
+      switcher.querySelectorAll('.lang-btn').forEach(btn => {
+        if (btn.getAttribute('data-lang') === lang) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    });
+    
+    // Fade back in
+    document.body.style.opacity = '1';
+    
+    // Show toast notification
+    const langNames = {
+      vi: 'Tiếng Việt 🇻🇳',
+      en: 'English 🇬🇧',
+      ja: '日本語 🇯🇵'
+    };
+    
+    if (typeof toast === 'function') {
+      toast(`Đã chuyển sang ${langNames[lang]}`, 'success');
+    }
+  }, 150);
 }
 
 // Update all translations on page
