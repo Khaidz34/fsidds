@@ -503,7 +503,7 @@ textarea.inp-fc{resize:none;}
         <div class="sec-title">📦 Tất cả đơn hôm nay</div><div class="sec-sub">Danh sách đặt cơm toàn công ty</div>
         <div class="d-flex gap-2 mb-3">
           <button class="btn-order" style="padding:9px 18px;font-size:.83rem;" onclick="exportCSV()"><i class="fas fa-file-excel me-1"></i>Xuất CSV</button>
-          <button class="btn-order" style="padding:9px 18px;font-size:.83rem;background:#e74c3c;border:none;" onclick="exportOrdersPDF()"><i class="fas fa-file-pdf me-1"></i>Xuất menu hôm nay (PDF)</button>
+          <button class="btn-order" style="padding:9px 18px;font-size:.83rem;background:#25D366;border:none;" onclick="exportZaloText()"><i class="fab fa-whatsapp me-1"></i>Xuất văn bản Zalo</button>
           <button onclick="window.print()" style="padding:9px 18px;font-size:.83rem;background:white;border:2px solid var(--primary);border-radius:10px;color:var(--primary);font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;"><i class="fas fa-print me-1"></i>In</button>
         </div>
         <div class="card-m">
@@ -600,6 +600,22 @@ textarea.inp-fc{resize:none;}
 </div>
 
 <div class="toast-box" id="toastBox"></div>
+
+<!-- ZALO TEXT MODAL -->
+<div id="zaloModal" style="display:none;position:fixed;inset:0;background:rgba(13,27,42,.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeZaloModal()">
+  <div style="background:white;border-radius:20px;padding:28px 32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;color:var(--dark);">📋 Danh sách đặt cơm</div>
+      <button onclick="closeZaloModal()" style="width:32px;height:32px;border-radius:50%;border:none;background:#F0F2F5;color:#666;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="background:#F5F8FF;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <pre id="zaloTextContent" style="margin:0;font-family:'Courier New',monospace;font-size:.9rem;color:var(--dark);white-space:pre-wrap;word-wrap:break-word;"></pre>
+    </div>
+    <button onclick="copyZaloText()" style="width:100%;background:#25D366;border:none;border-radius:12px;padding:13px;color:white;font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <i class="fas fa-copy"></i> Copy để gửi Zalo
+    </button>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -1192,10 +1208,9 @@ function exportCSV(){
   toast('Đã xuất CSV 📊');
 }
 
-async function exportOrdersPDF(){
-  console.log('🚀 exportOrdersPDF() CALLED!');
+async function exportZaloText(){
+  console.log('🚀 exportZaloText() CALLED!');
   if(!cachedOrders.length){ toast('Không có đơn nào để xuất!','warn'); return; }
-  if(!window.pdfMake){ toast('Thư viện PDF chưa sẵn sàng','err'); return; }
   
   // Ensure menuData is loaded
   if(!menuData || !menuData.dishes) {
@@ -1211,89 +1226,67 @@ async function exportOrdersPDF(){
     }
   }
   
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
-
-  const body = [
-    [{text:'STT',bold:true},{text:'Người ăn',bold:true},{text:'Số thứ tự món',bold:true},{text:'Ghi chú',bold:true}]
-  ];
-  console.log('=== exportOrdersPDF START ===');
-  console.log('menuData:', JSON.stringify(menuData, null, 2));
-  console.log('menuData.dishes sample:', menuData.dishes?.slice(0, 2));
-  console.log('cachedOrders sample:', cachedOrders?.slice(0, 2));
+  let textLines = [];
   
   cachedOrders.forEach((o,i)=>{
-    // Tìm số thứ tự của các món trong menuData dùng field 'order'
+    // Tìm số thứ tự của các món
     let dishNumbers = [];
-    console.log(`\n--- Order ${i} ---`);
-    console.log('o.dish1:', o.dish1);
-    console.log('o.dish2:', o.dish2);
     
     if(o.dish1?.id) {
-      console.log(`Searching for dish1.id=${o.dish1.id}`);
-      console.log('menuData.dishes:', menuData.dishes);
       // Ưu tiên dùng sort_order từ order response, nếu không có thì tìm trong menuData
       if(o.dish1.sort_order !== undefined) {
         dishNumbers.push(o.dish1.sort_order);
-        console.log(`Using dish1.sort_order = ${o.dish1.sort_order}`);
       } else {
         const dish = menuData.dishes.find(d => d.id === o.dish1.id);
-        console.log(`Found dish1:`, dish);
-        if(dish) {
-          console.log(`dish.order = ${dish.order}`);
-          dishNumbers.push(dish.order);
-        } else {
-          console.warn(`NOT FOUND: dish1.id ${o.dish1.id}`);
-        }
+        if(dish) dishNumbers.push(dish.order);
       }
     }
     if(o.dish2?.id) {
-      console.log(`Searching for dish2.id=${o.dish2.id}`);
       // Ưu tiên dùng sort_order từ order response, nếu không có thì tìm trong menuData
       if(o.dish2.sort_order !== undefined) {
         dishNumbers.push(o.dish2.sort_order);
-        console.log(`Using dish2.sort_order = ${o.dish2.sort_order}`);
       } else {
         const dish = menuData.dishes.find(d => d.id === o.dish2.id);
-        console.log(`Found dish2:`, dish);
-        if(dish) {
-          console.log(`dish.order = ${dish.order}`);
-          dishNumbers.push(dish.order);
-        } else {
-          console.warn(`NOT FOUND: dish2.id ${o.dish2.id}`);
-        }
+        if(dish) dishNumbers.push(dish.order);
       }
     }
-    const dishStr = dishNumbers.length ? dishNumbers.join(', ') : '?';
-    console.log(`FINAL dishStr for order ${i}: "${dishStr}"`);
     
-    body.push([
-      {text: i+1, fontSize:11},
-      {text: o.receiver?.fullname||'?', fontSize:11},
-      {text: dishStr, fontSize:11},
-      {text: o.notes||'—', fontSize:11}
-    ]);
+    const dishStr = dishNumbers.length ? dishNumbers.join('+') : '?';
+    const name = o.receiver?.fullname || '?';
+    const notes = o.notes ? ` (${o.notes})` : '';
+    
+    textLines.push(`${i+1}.\t${name} ${dishStr}${notes}`);
   });
+  
+  const finalText = textLines.join('\n');
+  
+  // Show modal
+  document.getElementById('zaloTextContent').textContent = finalText;
+  document.getElementById('zaloModal').style.display = 'flex';
+  
+  toast('Đã tạo văn bản! Bấm Copy để gửi Zalo ✅');
+}
 
-  const dd = {
-    pageSize:'A4',
-    pageMargins:[24,32,24,32],
-    content:[
-      { text:'Danh sách đặt cơm hôm nay', fontSize:18, bold:true, color:'#0D1B2A' },
-      { text: dateStr, margin:[0,6,0,14], fontSize:12, color:'#7A8EA0' },
-      {
-        table:{
-          headerRows:1,
-          widths:['auto','*','auto','*'],
-          body
-        },
-        layout:'lightHorizontalLines',
-        fontSize:11
-      }
-    ]
-  };
-  window.pdfMake.createPdf(dd).download(`menu-dat-com-${today.toISOString().split('T')[0]}.pdf`);
-  toast('Đã xuất PDF menu hôm nay ✅');
+function closeZaloModal(){
+  document.getElementById('zaloModal').style.display = 'none';
+}
+
+function copyZaloText(){
+  const text = document.getElementById('zaloTextContent').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Đã copy! Dán vào Zalo để gửi 📋','success');
+  }).catch(()=>{
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    toast('Đã copy! Dán vào Zalo để gửi 📋','success');
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
