@@ -520,6 +520,15 @@ body::before {
   padding: var(--spacing-lg);
 }
 
+/* Page management */
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
 /* Cards */
 .card {
   background: var(--bg-paper);
