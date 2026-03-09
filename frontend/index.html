@@ -806,6 +806,267 @@
         </div>
       </div>
       
+      <!-- ═══════════════════════════════════════════════════════════
+           MENU MANAGEMENT PAGE (Admin)
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="menuMgmtPage" class="page" style="display:none;">
+        <div class="card mb-3">
+          <div class="card-header">
+            <div class="card-title">📝 Đăng menu hôm nay</div>
+            <div class="badge badge-primary" id="menuMgmtDate">--/--</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Danh sách món (mỗi món 1 dòng)</label>
+              <textarea class="form-input" id="menuDishes" rows="10" placeholder="VD:&#10;Cơm gà xối mỡ&#10;Cơm sườn nướng&#10;Bún bò Huế&#10;Phở bò tái&#10;Cơm chiên dương châu&#10;Mì xào hải sản"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Link ảnh menu (tùy chọn)</label>
+              <input type="url" class="form-input" id="menuImageUrl" placeholder="https://example.com/menu.jpg">
+            </div>
+            
+            <button class="btn btn-primary w-100" onclick="postMenu()">
+              <i class="fas fa-paper-plane"></i>
+              <span>Đăng menu</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👁️ Xem trước menu</div>
+          </div>
+          <div class="card-body" id="menuPreview">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <div class="empty-text">Nhập danh sách món ở trên</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ═══════════════════════════════════════════════════════════
+           STATISTICS PAGE (Admin)
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="statisticsPage" class="page" style="display:none;">
+        <div class="grid grid-2 mb-3">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📊 Thống kê tuần này</div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Người dùng</th>
+                      <th>Số suất</th>
+                    </tr>
+                  </thead>
+                  <tbody id="weekStatsTable">
+                    <tr>
+                      <td colspan="2" class="text-center">
+                        <div class="empty-state">
+                          <div class="empty-icon">📊</div>
+                          <div class="empty-text">Đang tải...</div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📈 Thống kê tháng</div>
+              <input type="month" class="form-input" id="statsMonth" onchange="loadMonthStats()" style="width:auto;">
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Người dùng</th>
+                      <th>Số suất</th>
+                      <th>Tổng tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody id="monthStatsTable">
+                    <tr>
+                      <td colspan="3" class="text-center">
+                        <div class="empty-state">
+                          <div class="empty-icon">📊</div>
+                          <div class="empty-text">Chọn tháng để xem</div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ═══════════════════════════════════════════════════════════
+           PAYMENT PAGE (Admin)
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="paymentPage" class="page" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💰 Quản lý thanh toán</div>
+            <div class="d-flex gap-2">
+              <input type="month" class="form-input" id="paymentMonth" onchange="loadPayments()" style="width:auto;">
+              <button class="btn btn-sm btn-secondary" onclick="loadPayments()">
+                <i class="fas fa-sync"></i> Làm mới
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Người dùng</th>
+                    <th>Tổng suất</th>
+                    <th>Tổng tiền</th>
+                    <th>Đã thanh toán</th>
+                    <th>Còn lại</th>
+                    <th>Ngày TT</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="paymentTable">
+                  <tr>
+                    <td colspan="7" class="text-center">
+                      <div class="empty-state">
+                        <div class="empty-icon">💰</div>
+                        <div class="empty-text">Chọn tháng để xem</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ═══════════════════════════════════════════════════════════
+           INVOICE PAGE (Admin)
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="invoicePage" class="page" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🧾 Xuất hóa đơn PDF</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Chọn tháng</label>
+              <input type="month" class="form-input" id="invoiceMonth">
+            </div>
+            
+            <button class="btn btn-primary w-100 mb-3" onclick="exportInvoicePDF()">
+              <i class="fas fa-file-pdf"></i>
+              <span>Xuất PDF</span>
+            </button>
+            
+            <div style="background:var(--bg-light);border-radius:var(--radius);padding:16px;">
+              <div style="font-weight:700;margin-bottom:8px;">📋 Xem trước</div>
+              <div id="invoicePreview">
+                <div class="empty-state">
+                  <div class="empty-icon">🧾</div>
+                  <div class="empty-text">Chọn tháng và bấm Xuất PDF</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ═══════════════════════════════════════════════════════════
+           FEEDBACK PAGE
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="feedbackPage" class="page" style="display:none;">
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">💬 Gửi góp ý</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Tiêu đề (tùy chọn)</label>
+                <input type="text" class="form-input" id="feedbackSubject" placeholder="VD: Đề xuất cải thiện giao diện">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Nội dung góp ý</label>
+                <textarea class="form-input" id="feedbackMessage" rows="6" placeholder="Nhập góp ý của bạn..." required></textarea>
+              </div>
+              
+              <button class="btn btn-primary w-100" onclick="submitFeedback()">
+                <i class="fas fa-paper-plane"></i>
+                <span>Gửi góp ý</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📝 Góp ý của tôi</div>
+            </div>
+            <div class="card-body" id="myFeedbackList">
+              <div class="empty-state">
+                <div class="empty-icon">💬</div>
+                <div class="empty-text">Chưa có góp ý nào</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ═══════════════════════════════════════════════════════════
+           USER MANAGEMENT PAGE (Admin)
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="userMgmtPage" class="page" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👥 Quản lý tài khoản</div>
+            <button class="btn btn-sm btn-secondary" onclick="loadUsers()">
+              <i class="fas fa-sync"></i> Làm mới
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Họ tên</th>
+                    <th>Vai trò</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="userMgmtTable">
+                  <tr>
+                    <td colspan="5" class="text-center">
+                      <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-text">Đang tải...</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
     </div>
   </main>
 </div>
@@ -1083,6 +1344,27 @@ function showPage(pageId) {
   else if (pageId === 'orderPage') loadOrderPage();
   else if (pageId === 'myOrders') loadMyOrders();
   else if (pageId === 'allOrders') loadAllOrders();
+  else if (pageId === 'menuMgmt') {
+    document.getElementById('menuMgmtDate').textContent = new Date().toLocaleDateString('vi-VN');
+  }
+  else if (pageId === 'statistics') {
+    document.getElementById('statsMonth').value = new Date().toISOString().slice(0, 7);
+    loadWeekStats();
+    loadMonthStats();
+  }
+  else if (pageId === 'payment') {
+    document.getElementById('paymentMonth').value = new Date().toISOString().slice(0, 7);
+    loadPayments();
+  }
+  else if (pageId === 'invoice') {
+    document.getElementById('invoiceMonth').value = new Date().toISOString().slice(0, 7);
+  }
+  else if (pageId === 'feedback') {
+    loadMyFeedback();
+  }
+  else if (pageId === 'userMgmt') {
+    loadUsers();
+  }
   
   // Close sidebar on mobile
   closeSidebar();
@@ -1412,6 +1694,370 @@ function exportCSV() {
   link.click();
   
   toast('Đã xuất CSV! ✅');
+}
+
+// ═══════════════════════════════════════════════════════════
+// MENU MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+async function postMenu() {
+  const dishesText = document.getElementById('menuDishes').value.trim();
+  const imageUrl = document.getElementById('menuImageUrl').value.trim();
+  
+  if (!dishesText) {
+    toast('Vui lòng nhập danh sách món!', 'warning');
+    return;
+  }
+  
+  const dishes = dishesText.split('\n').map(d => d.trim()).filter(d => d);
+  
+  if (dishes.length === 0) {
+    toast('Danh sách món không hợp lệ!', 'warning');
+    return;
+  }
+  
+  try {
+    await api('POST', '/api/menu', { dishes, imageUrl: imageUrl || null });
+    toast('Đã đăng menu thành công! 🎉');
+    
+    // Reload menu
+    menuData = await api('GET', '/api/menu/today');
+    
+    // Show preview
+    showMenuPreview(dishes);
+    
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+function showMenuPreview(dishes) {
+  const preview = document.getElementById('menuPreview');
+  preview.innerHTML = dishes.map((d, i) => `
+    <div style="padding:12px 0;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:12px;">
+      <div class="dish-number">${i + 1}</div>
+      <div style="flex:1;font-weight:600;color:var(--text);">${d}</div>
+    </div>
+  `).join('');
+}
+
+// Auto preview when typing
+document.addEventListener('DOMContentLoaded', () => {
+  const textarea = document.getElementById('menuDishes');
+  if (textarea) {
+    textarea.addEventListener('input', () => {
+      const text = textarea.value.trim();
+      if (text) {
+        const dishes = text.split('\n').map(d => d.trim()).filter(d => d);
+        if (dishes.length > 0) {
+          showMenuPreview(dishes);
+        }
+      }
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// STATISTICS
+// ═══════════════════════════════════════════════════════════
+async function loadWeekStats() {
+  try {
+    const stats = await api('GET', '/api/stats/week');
+    const tbody = document.getElementById('weekStatsTable');
+    
+    if (stats.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="2" class="text-center"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">Chưa có dữ liệu</div></div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = stats.map(s => `
+      <tr>
+        <td style="font-weight:600;">${s.fullname}</td>
+        <td style="font-weight:700;color:var(--primary);">${s.count} suất</td>
+      </tr>
+    `).join('');
+    
+  } catch (err) {
+    toast('Lỗi tải thống kê tuần: ' + err.message, 'error');
+  }
+}
+
+async function loadMonthStats() {
+  const month = document.getElementById('statsMonth').value || new Date().toISOString().slice(0, 7);
+  
+  try {
+    const stats = await api('GET', `/api/stats/month?month=${month}`);
+    const tbody = document.getElementById('monthStatsTable');
+    
+    if (stats.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">Chưa có dữ liệu</div></div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = stats.map(s => `
+      <tr>
+        <td style="font-weight:600;">${s.fullname}</td>
+        <td style="font-weight:700;color:var(--primary);">${s.count} suất</td>
+        <td style="font-weight:700;color:var(--matcha-green);">${(s.total / 1000)}k</td>
+      </tr>
+    `).join('');
+    
+  } catch (err) {
+    toast('Lỗi tải thống kê tháng: ' + err.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAYMENT
+// ═══════════════════════════════════════════════════════════
+async function loadPayments() {
+  const month = document.getElementById('paymentMonth').value || new Date().toISOString().slice(0, 7);
+  
+  try {
+    const payments = await api('GET', `/api/payments?month=${month}`);
+    const tbody = document.getElementById('paymentTable');
+    
+    if (payments.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Chưa có dữ liệu</div></div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = payments.map(p => `
+      <tr style="${p.remainingTotal === 0 ? 'opacity:0.6;' : ''}">
+        <td style="font-weight:600;">${p.fullname}</td>
+        <td>${p.ordersCount} suất</td>
+        <td style="font-weight:700;color:var(--primary);">${(p.ordersTotal / 1000)}k</td>
+        <td style="color:var(--matcha-green);">${p.paidCount} suất (${(p.paidTotal / 1000)}k)</td>
+        <td style="font-weight:700;color:${p.remainingTotal > 0 ? 'var(--danger)' : 'var(--matcha-green)'};">${p.remainingCount} suất (${(p.remainingTotal / 1000)}k)</td>
+        <td style="font-size:0.8125rem;">${p.paidAt ? new Date(p.paidAt).toLocaleDateString('vi-VN') : '—'}</td>
+        <td>
+          ${p.remainingTotal > 0 ? `
+            <button class="btn btn-sm btn-success" onclick="markPaid(${p.userId}, '${month}')">
+              <i class="fas fa-check"></i> Đã TT
+            </button>
+          ` : '<span class="badge badge-success">✓ Hoàn tất</span>'}
+        </td>
+      </tr>
+    `).join('');
+    
+  } catch (err) {
+    toast('Lỗi tải thanh toán: ' + err.message, 'error');
+  }
+}
+
+async function markPaid(userId, month) {
+  if (!confirm('Xác nhận người dùng này đã thanh toán?')) return;
+  
+  try {
+    await api('POST', '/api/payments/mark-paid', { userId, month });
+    toast('Đã xác nhận thanh toán! ✅');
+    loadPayments();
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INVOICE
+// ═══════════════════════════════════════════════════════════
+async function exportInvoicePDF() {
+  const month = document.getElementById('invoiceMonth').value || new Date().toISOString().slice(0, 7);
+  
+  try {
+    const data = await api('GET', `/api/invoices/month?month=${month}`);
+    
+    if (!data.users || data.users.length === 0) {
+      toast('Không có dữ liệu để xuất!', 'warning');
+      return;
+    }
+    
+    // Show preview
+    const totalAll = data.users.reduce((s, u) => s + u.total, 0);
+    document.getElementById('invoicePreview').innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:700;font-size:1.125rem;color:var(--dark);margin-bottom:8px;">Hóa đơn tháng ${data.month}</div>
+        <div style="color:var(--text-muted);font-size:0.875rem;">${data.users.length} người · Tổng: <b style="color:var(--primary);">${(totalAll / 1000)}k</b></div>
+      </div>
+      ${data.users.slice(0, 5).map(u => `
+        <div style="padding:12px 0;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;">
+          <div>
+            <div style="font-weight:700;">${u.fullname}</div>
+            <div style="font-size:0.8125rem;color:var(--text-muted);">${u.count} suất</div>
+          </div>
+          <div style="font-weight:800;color:var(--primary);">${(u.total / 1000)}k</div>
+        </div>
+      `).join('')}
+      ${data.users.length > 5 ? `<div style="margin-top:12px;color:var(--text-muted);font-size:0.875rem;">... và ${data.users.length - 5} người khác</div>` : ''}
+    `;
+    
+    // Generate PDF
+    if (!window.pdfMake) {
+      toast('Thư viện PDF chưa tải xong', 'error');
+      return;
+    }
+    
+    const dd = {
+      pageSize: 'A4',
+      pageMargins: [32, 38, 32, 38],
+      content: [
+        { text: 'HÓA ĐƠN CƠM NỘI BỘ', fontSize: 16, bold: true, color: '#0D1B2A' },
+        { text: `Tháng: ${data.month}`, margin: [0, 4, 0, 10], color: '#7A8EA0' },
+        {
+          columns: [
+            { text: `Tổng người: ${data.users.length}`, color: '#0D1B2A' },
+            { text: `Tổng tiền: ${(totalAll / 1000)}k`, alignment: 'right', bold: true, color: '#0056D2' }
+          ],
+          margin: [0, 0, 0, 12]
+        },
+        ...data.users.flatMap(u => ([
+          { text: u.fullname, fontSize: 12, bold: true, margin: [0, 8, 0, 2] },
+          { text: `${u.count} suất × 40.000đ = ${(u.total / 1000)}k`, color: '#0056D2', margin: [0, 0, 0, 4] },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['auto', '*', '*', 'auto'],
+              body: [
+                ['Ngày', 'Món 1', 'Món 2', 'Giá'],
+                ...u.orders.map(o => [
+                  o.date,
+                  o.dish1?.name || '?',
+                  o.dish2?.name || '?',
+                  '40k'
+                ])
+              ]
+            },
+            layout: 'lightHorizontalLines',
+            fontSize: 9
+          }
+        ]))
+      ],
+      defaultStyle: {
+        fontSize: 10
+      }
+    };
+    
+    window.pdfMake.createPdf(dd).download(`hoa-don-com-${data.month}.pdf`);
+    toast('Đã xuất PDF! ✅');
+    
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FEEDBACK
+// ═══════════════════════════════════════════════════════════
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject').value.trim();
+  const message = document.getElementById('feedbackMessage').value.trim();
+  
+  if (!message || message.length < 6) {
+    toast('Nội dung góp ý phải có ít nhất 6 ký tự!', 'warning');
+    return;
+  }
+  
+  try {
+    await api('POST', '/api/feedback', { subject: subject || null, message });
+    toast('Đã gửi góp ý! Cảm ơn bạn 🙏');
+    
+    document.getElementById('feedbackSubject').value = '';
+    document.getElementById('feedbackMessage').value = '';
+    
+    loadMyFeedback();
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+async function loadMyFeedback() {
+  try {
+    const feedbacks = await api('GET', '/api/feedback');
+    const container = document.getElementById('myFeedbackList');
+    
+    if (feedbacks.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">Chưa có góp ý nào</div></div>';
+      return;
+    }
+    
+    container.innerHTML = feedbacks.map(f => `
+      <div style="background:var(--bg-light);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+          <div style="font-weight:700;color:var(--dark);">${f.subject || 'Góp ý'}</div>
+          <span class="badge ${f.status === 'open' ? 'badge-primary' : f.status === 'reviewed' ? 'badge-warning' : 'badge-success'}">
+            ${f.status === 'open' ? '📝 Mới' : f.status === 'reviewed' ? '👀 Đã xem' : '✅ Hoàn tất'}
+          </span>
+        </div>
+        <div style="color:var(--text);font-size:0.9375rem;margin-bottom:8px;">${f.message}</div>
+        <div style="font-size:0.8125rem;color:var(--text-muted);">${new Date(f.created_at).toLocaleString('vi-VN')}</div>
+      </div>
+    `).join('');
+    
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// USER MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const users = await api('GET', '/api/users');
+    const tbody = document.getElementById('userMgmtTable');
+    
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td style="font-weight:600;">${u.username}</td>
+        <td>${u.fullname}</td>
+        <td>
+          <span class="badge ${u.role === 'admin' ? 'badge-danger' : 'badge-primary'}">
+            ${u.role === 'admin' ? '👑 Admin' : '👤 User'}
+          </span>
+        </td>
+        <td>
+          ${u.id !== currentUser.id ? `
+            <div class="btn-group">
+              <button class="btn btn-sm btn-secondary" onclick="toggleUserRole(${u.id}, '${u.role}')">
+                <i class="fas fa-exchange-alt"></i> Đổi role
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          ` : '<span class="badge badge-primary">Bạn</span>'}
+        </td>
+      </tr>
+    `).join('');
+    
+  } catch (err) {
+    toast('Lỗi tải users: ' + err.message, 'error');
+  }
+}
+
+async function toggleUserRole(userId, currentRole) {
+  const newRole = currentRole === 'admin' ? 'user' : 'admin';
+  
+  if (!confirm(`Đổi role thành ${newRole}?`)) return;
+  
+  try {
+    await api('PATCH', `/api/users/${userId}/role`, { role: newRole });
+    toast('Đã đổi role! ✅');
+    loadUsers();
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+async function deleteUser(userId) {
+  if (!confirm('Xác nhận xóa user này? Không thể hoàn tác!')) return;
+  
+  try {
+    await api('DELETE', `/api/users/${userId}`);
+    toast('Đã xóa user! ✅');
+    loadUsers();
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
