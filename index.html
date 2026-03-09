@@ -1232,24 +1232,36 @@ async function exportOrdersPDF(){
     if(o.dish1?.id) {
       console.log(`Searching for dish1.id=${o.dish1.id}`);
       console.log('menuData.dishes:', menuData.dishes);
-      const dish = menuData.dishes.find(d => d.id === o.dish1.id);
-      console.log(`Found dish1:`, dish);
-      if(dish) {
-        console.log(`dish.order = ${dish.order}`);
-        dishNumbers.push(dish.order);
+      // Ưu tiên dùng sort_order từ order response, nếu không có thì tìm trong menuData
+      if(o.dish1.sort_order !== undefined) {
+        dishNumbers.push(o.dish1.sort_order);
+        console.log(`Using dish1.sort_order = ${o.dish1.sort_order}`);
       } else {
-        console.warn(`NOT FOUND: dish1.id ${o.dish1.id}`);
+        const dish = menuData.dishes.find(d => d.id === o.dish1.id);
+        console.log(`Found dish1:`, dish);
+        if(dish) {
+          console.log(`dish.order = ${dish.order}`);
+          dishNumbers.push(dish.order);
+        } else {
+          console.warn(`NOT FOUND: dish1.id ${o.dish1.id}`);
+        }
       }
     }
     if(o.dish2?.id) {
       console.log(`Searching for dish2.id=${o.dish2.id}`);
-      const dish = menuData.dishes.find(d => d.id === o.dish2.id);
-      console.log(`Found dish2:`, dish);
-      if(dish) {
-        console.log(`dish.order = ${dish.order}`);
-        dishNumbers.push(dish.order);
+      // Ưu tiên dùng sort_order từ order response, nếu không có thì tìm trong menuData
+      if(o.dish2.sort_order !== undefined) {
+        dishNumbers.push(o.dish2.sort_order);
+        console.log(`Using dish2.sort_order = ${o.dish2.sort_order}`);
       } else {
-        console.warn(`NOT FOUND: dish2.id ${o.dish2.id}`);
+        const dish = menuData.dishes.find(d => d.id === o.dish2.id);
+        console.log(`Found dish2:`, dish);
+        if(dish) {
+          console.log(`dish.order = ${dish.order}`);
+          dishNumbers.push(dish.order);
+        } else {
+          console.warn(`NOT FOUND: dish2.id ${o.dish2.id}`);
+        }
       }
     }
     const dishStr = dishNumbers.length ? dishNumbers.join(', ') : '?';

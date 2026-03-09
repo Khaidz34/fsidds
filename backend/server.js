@@ -349,8 +349,8 @@ app.get('/api/orders/today', authMiddleware, async (req, res) => {
     .from('orders')
     .select(`
       id, ordered_by, ordered_for, price, date, notes, rating, created_at,
-      dish1:dish1_id(id, name),
-      dish2:dish2_id(id, name),
+      dish1:dish1_id(id, name, sort_order),
+      dish2:dish2_id(id, name, sort_order),
       orderer:ordered_by(id, fullname),
       receiver:ordered_for(id, fullname)
     `)
@@ -373,8 +373,8 @@ app.get('/api/orders/my', authMiddleware, async (req, res) => {
     .from('orders')
     .select(`
       id, ordered_by, ordered_for, price, date, notes, rating, created_at,
-      dish1:dish1_id(id, name),
-      dish2:dish2_id(id, name),
+      dish1:dish1_id(id, name, sort_order),
+      dish2:dish2_id(id, name, sort_order),
       orderer:ordered_by(id, fullname)
     `)
     .eq('ordered_for', req.user.id)
@@ -445,8 +445,8 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
       })
       .select(`
         id, price, date, notes, rating, created_at,
-        dish1:dish1_id(id, name),
-        dish2:dish2_id(id, name),
+        dish1:dish1_id(id, name, sort_order),
+        dish2:dish2_id(id, name, sort_order),
         orderer:ordered_by(id, fullname),
         receiver:ordered_for(id, fullname)
       `)
@@ -688,8 +688,8 @@ app.get('/api/invoices/month', authMiddleware, adminMiddleware, async (req, res)
       .from('orders')
       .select(`
         id, date, price, created_at,
-        dish1:dish1_id(id, name),
-        dish2:dish2_id(id, name),
+        dish1:dish1_id(id, name, sort_order),
+        dish2:dish2_id(id, name, sort_order),
         receiver:ordered_for(id, fullname)
       `)
       .eq('month', month)
